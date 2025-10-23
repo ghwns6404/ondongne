@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "58574278323",
+    "project_id": "ondongne-e494a",
+    "storage_bucket": "ondongne-e494a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:58574278323:android:8ed9a28a2c30351b212ac6",
+        "android_client_info": {
+          "package_name": "com.example.frontend"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCJuBINCMYV8dpAZQYz2FuAJRP682tFpJA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
