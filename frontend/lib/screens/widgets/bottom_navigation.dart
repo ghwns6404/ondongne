@@ -18,7 +18,7 @@ class BottomNavigation extends StatelessWidget {
         color: scheme.surface,
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.08),
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.08),
             spreadRadius: 1,
             blurRadius: 5,
             offset: const Offset(0, -2),
@@ -30,7 +30,7 @@ class BottomNavigation extends StatelessWidget {
         currentIndex: currentIndex,
         onTap: onTap,
         selectedItemColor: scheme.primary,
-        unselectedItemColor: Colors.grey,
+        unselectedItemColor: scheme.onSurface.withOpacity(0.5),
         backgroundColor: scheme.surface,
         elevation: 0,
         items: const [

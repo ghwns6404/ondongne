@@ -119,8 +119,8 @@ class _NewsFormScreenState extends State<NewsFormScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.newsToEdit != null ? '소식 수정' : '소식 작성'),
-        backgroundColor: const Color(0xFFFF6B35),
-        foregroundColor: Colors.white,
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        foregroundColor: Theme.of(context).colorScheme.onSurface,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -164,7 +164,7 @@ class _NewsFormScreenState extends State<NewsFormScreen> {
               ),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
-                value: _selectedRegion,
+                initialValue: _selectedRegion,
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),
                 ),
@@ -221,14 +221,14 @@ class _NewsFormScreenState extends State<NewsFormScreen> {
                 child: ElevatedButton(
                   onPressed: _isLoading ? null : _submitNews,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFFF6B35),
-                    foregroundColor: Colors.white,
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    foregroundColor: Theme.of(context).colorScheme.onPrimary,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
                   child: _isLoading
-                      ? const CircularProgressIndicator(color: Colors.white)
+                      ? CircularProgressIndicator(color: Theme.of(context).colorScheme.onPrimary)
                       : Text(
                           widget.newsToEdit != null ? '수정 완료' : '소식 등록',
                           style: const TextStyle(

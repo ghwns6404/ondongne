@@ -107,8 +107,8 @@ class _AdminNewsFormScreenState extends State<AdminNewsFormScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.adminNewsToEdit != null ? '뉴스&이벤트 수정' : '뉴스&이벤트 작성'),
-        backgroundColor: const Color(0xFFFF6B35),
-        foregroundColor: Colors.white,
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        foregroundColor: Theme.of(context).colorScheme.onSurface,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -152,7 +152,7 @@ class _AdminNewsFormScreenState extends State<AdminNewsFormScreen> {
               ),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
-                value: _selectedRegion,
+                initialValue: _selectedRegion,
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),
                 ),
@@ -209,14 +209,14 @@ class _AdminNewsFormScreenState extends State<AdminNewsFormScreen> {
                 child: ElevatedButton(
                   onPressed: _isLoading ? null : _submitAdminNews,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFFF6B35),
-                    foregroundColor: Colors.white,
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    foregroundColor: Theme.of(context).colorScheme.onPrimary,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
                   child: _isLoading
-                      ? const CircularProgressIndicator(color: Colors.white)
+                      ? CircularProgressIndicator(color: Theme.of(context).colorScheme.onPrimary)
                       : Text(
                           widget.adminNewsToEdit != null ? '수정 완료' : '뉴스&이벤트 등록',
                           style: const TextStyle(

@@ -5,7 +5,8 @@ import '../../services/news_service.dart';
 import '../../services/admin_news_service.dart';
 
 class NewsSection extends StatelessWidget {
-  const NewsSection({super.key});
+  final String? searchQuery; // 옵션: 검색어
+  const NewsSection({super.key, this.searchQuery});
 
   @override
   Widget build(BuildContext context) {
@@ -71,6 +72,22 @@ class NewsSection extends StatelessWidget {
                   
                   final newsList = newsSnapshot.data ?? [];
                   final adminNewsList = adminNewsSnapshot.data ?? [];
+
+                  // 검색어 필터 (제목/내용에 포함 여부, 대소문자 무시)
+                  final q = (searchQuery ?? '').trim().toLowerCase();
+                  final filteredAdmin = q.isEmpty
+                      ? adminNewsList
+                      : adminNewsList.where((n) {
+                          final title = (n.title).toLowerCase();
+                          return title.contains(q);
+                        }).toList();
+                  final filteredNews = q.isEmpty
+                      ? newsList
+                      : newsList.where((n) {
+                          final title = (n.title).toLowerCase();
+                          final content = (n.content).toLowerCase();
+                          return title.contains(q) || content.contains(q);
+                        }).toList();
                   
                   if (newsList.isEmpty && adminNewsList.isEmpty) {
                     return const SizedBox(
@@ -88,12 +105,12 @@ class NewsSection extends StatelessWidget {
                   final allNews = <Widget>[];
                   
                   // 뉴스&이벤트 카드들
-                  for (final adminNews in adminNewsList.take(3)) {
+                  for (final adminNews in filteredAdmin.take(3)) {
                     allNews.add(_buildAdminNewsCard(adminNews, tossPrimary));
                   }
                   
                   // 일반 소식 카드들
-                  for (final news in newsList.take(5)) {
+                  for (final news in filteredNews.take(5)) {
                     allNews.add(_buildNewsCard(news));
                   }
                   

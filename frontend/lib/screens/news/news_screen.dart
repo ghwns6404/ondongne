@@ -7,7 +7,7 @@ import '../../services/user_service.dart';
 import 'news_form_screen.dart';
 import 'admin_news_form_screen.dart';
 import 'news_detail_screen.dart';
-import 'admin_news_detail_screen.dart';
+// import 'admin_news_detail_screen.dart';
 
 class NewsScreen extends StatelessWidget {
   const NewsScreen({super.key});
@@ -97,7 +97,7 @@ class NewsScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: primary.withOpacity(0.05),
         border: Border(
-          bottom: BorderSide(color: Colors.grey[300]!, width: 1),
+          bottom: BorderSide(color: Theme.of(context).dividerColor, width: 1),
         ),
       ),
       child: Column(
@@ -141,18 +141,8 @@ class NewsScreen extends StatelessWidget {
                   scrollDirection: Axis.horizontal,
                   itemCount: adminNewsList.length,
                   itemBuilder: (context, index) {
-                    return GestureDetector(
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => AdminNewsDetailScreen(
-                              adminNews: adminNewsList[index],
-                            ),
-                          ),
-                        );
-                      },
-                      child: _buildAdminNewsCard(adminNewsList[index], primary),
-                    );
+                    final adminNews = adminNewsList[index];
+                    return _buildAdminNewsCard(context, adminNews, primary);
                   },
                 );
               },
@@ -257,16 +247,22 @@ class NewsScreen extends StatelessWidget {
                       // 하단 정보
                       Row(
                         children: [
-                          const Icon(Icons.favorite, size: 16, color: Colors.red),
+                          Icon(Icons.favorite, size: 16, color: Theme.of(context).colorScheme.primary),
                           const SizedBox(width: 4),
                           Text(
                             '${news.favoriteUserIds.length}',
-                            style: const TextStyle(fontSize: 12, color: Colors.grey),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                            ),
                           ),
                           const Spacer(),
                           Text(
                             _formatDate(news.createdAt),
-                            style: const TextStyle(fontSize: 12, color: Colors.grey),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                            ),
                           ),
                         ],
                       ),
@@ -282,14 +278,14 @@ class NewsScreen extends StatelessWidget {
   }
 
   // 뉴스&이벤트 카드
-  Widget _buildAdminNewsCard(AdminNews adminNews, Color primary) {
+  Widget _buildAdminNewsCard(BuildContext context, AdminNews adminNews, Color primary) {
     return Container(
       width: 280,
       margin: const EdgeInsets.only(right: 12),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
         color: primary.withOpacity(0.1),
-        border: Border.all(color: primary.withOpacity(0.3)),
+        border: Border.all(color: Theme.of(context).dividerColor),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),

@@ -47,7 +47,7 @@ class ProductCard extends StatelessWidget {
                   width: 80,
                   height: 80,
                   decoration: BoxDecoration(
-                    color: Colors.grey[200],
+                    color: Theme.of(context).colorScheme.surfaceVariant,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: product.imageUrls.isNotEmpty
@@ -57,11 +57,17 @@ class ProductCard extends StatelessWidget {
                             product.imageUrls.first,
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) {
-                              return const Icon(Icons.image, color: Colors.grey);
+                              return Icon(
+                                Icons.image,
+                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+                              );
                             },
                           ),
                         )
-                      : const Icon(Icons.image, color: Colors.grey),
+                      : Icon(
+                          Icons.image,
+                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+                        ),
                 ),
                 
                 const SizedBox(width: 12),

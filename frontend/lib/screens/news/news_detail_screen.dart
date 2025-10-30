@@ -19,8 +19,8 @@ class NewsDetailScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('소식 상세'),
-        backgroundColor: const Color(0xFF4CAF50),
-        foregroundColor: Colors.white,
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        foregroundColor: Theme.of(context).colorScheme.onSurface,
       ),
       body: Column(
         children: [
@@ -46,14 +46,14 @@ class NewsDetailScreen extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF4CAF50).withOpacity(0.1),
+                      color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Text(
                       news.region,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14,
-                        color: Color(0xFF4CAF50),
+                        color: Theme.of(context).colorScheme.primary,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -68,7 +68,7 @@ class NewsDetailScreen extends StatelessWidget {
                       height: 200,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(12),
-                        color: Colors.grey[200],
+                        color: Theme.of(context).colorScheme.surfaceVariant,
                       ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(12),
@@ -76,8 +76,12 @@ class NewsDetailScreen extends StatelessWidget {
                           news.imageUrls.first,
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) {
-                            return const Center(
-                              child: Icon(Icons.image, size: 50, color: Colors.grey),
+                            return Center(
+                              child: Icon(
+                                Icons.image,
+                                size: 50,
+                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+                              ),
                             );
                           },
                         ),

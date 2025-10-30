@@ -12,34 +12,35 @@ class AdBanner extends StatelessWidget {
         scrollDirection: Axis.horizontal,
         itemCount: 3,
         itemBuilder: (context, index) {
-          return _buildAdBanner(index);
+          return _buildAdBanner(context, index);
         },
       ),
     );
   }
 
-  Widget _buildAdBanner(int index) {
+  Widget _buildAdBanner(BuildContext context, int index) {
+    final primary = Theme.of(context).colorScheme.primary;
     final banners = [
       {
         'title': '온동네와 함께하는',
         'subtitle': '스마트한 중고거래!',
         'button': '지금 시작하기',
         'icon': Icons.shopping_cart,
-        'colors': [const Color(0xFFFF6B35), const Color(0xFFFF8A65)],
+        'colors': [primary, primary.withOpacity(0.7)],
       },
       {
         'title': '동네 사람들과',
         'subtitle': '소통하세요!',
         'button': '커뮤니티 참여',
         'icon': Icons.people,
-        'colors': [const Color(0xFF2196F3), const Color(0xFF64B5F6)],
+        'colors': [primary, primary.withOpacity(0.6)],
       },
       {
         'title': '실시간 채팅으로',
         'subtitle': '빠른 거래!',
         'button': '채팅 시작',
         'icon': Icons.chat,
-        'colors': [const Color(0xFF4CAF50), const Color(0xFF81C784)],
+        'colors': [primary, primary.withOpacity(0.5)],
       },
     ];
 

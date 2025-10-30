@@ -3,7 +3,8 @@ import '../../models/product.dart';
 import '../../services/product_service.dart';
 
 class PopularProductsSection extends StatelessWidget {
-  const PopularProductsSection({super.key});
+  final String? searchQuery; // 옵션: 검색어
+  const PopularProductsSection({super.key, this.searchQuery});
 
   @override
   Widget build(BuildContext context) {
@@ -64,9 +65,16 @@ class PopularProductsSection extends StatelessWidget {
               }
               
               final products = snapshot.data ?? [];
+              final q = (searchQuery ?? '').trim().toLowerCase();
+              final filtered = q.isEmpty
+                  ? products
+                  : products.where((p) {
+                      final title = p.title.toLowerCase();
+                      return title.contains(q);
+                    }).toList();
               
               // 하트 개수 기준으로 정렬하고 상위 6개만 선택
-              final popularProducts = products
+              final popularProducts = filtered
                 ..sort((a, b) => b.favoriteUserIds.length.compareTo(a.favoriteUserIds.length))
                 ..take(6);
               
@@ -74,10 +82,7 @@ class PopularProductsSection extends StatelessWidget {
                 return const SizedBox(
                   height: 180,
                   child: Center(
-                    child: Text(
-                      '등록된 상품이 없습니다',
-                      style: TextStyle(color: Colors.grey),
-                    ),
+                    child: Text('등록된 상품이 없습니다'),
                   ),
                 );
               }
@@ -88,7 +93,7 @@ class PopularProductsSection extends StatelessWidget {
                   scrollDirection: Axis.horizontal,
                   itemCount: popularProducts.length,
                   itemBuilder: (context, index) {
-                    return _buildProductCard(popularProducts[index], tossPrimary);
+                    return _buildProductCard(context, popularProducts[index], tossPrimary);
                   },
                 ),
               );
@@ -99,7 +104,7 @@ class PopularProductsSection extends StatelessWidget {
     );
   }
 
-  Widget _buildProductCard(Product product, Color tossPrimary) {
+  Widget _buildProductCard(BuildContext context, Product product, Color tossPrimary) {
     return Container(
       width: 200,
       margin: const EdgeInsets.only(right: 12),
@@ -107,7 +112,7 @@ class PopularProductsSection extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.06),
             spreadRadius: 1,
             blurRadius: 5,
             offset: const Offset(0, 2),
@@ -123,7 +128,7 @@ class PopularProductsSection extends StatelessWidget {
             child: Container(
               width: double.infinity,
               decoration: BoxDecoration(
-                color: Colors.grey[200],
+                color: Theme.of(context).colorScheme.surfaceVariant,
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
               ),
               child: product.imageUrls.isNotEmpty
@@ -133,11 +138,19 @@ class PopularProductsSection extends StatelessWidget {
                         product.imageUrls.first,
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) {
-                          return const Icon(Icons.shopping_bag, size: 40, color: Colors.grey);
+                          return Icon(
+                            Icons.shopping_bag,
+                            size: 40,
+                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+                          );
                         },
                       ),
                     )
-                  : const Icon(Icons.shopping_bag, size: 40, color: Colors.grey),
+                  : Icon(
+                      Icons.shopping_bag,
+                      size: 40,
+                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+                    ),
             ),
           ),
           
@@ -146,9 +159,9 @@ class PopularProductsSection extends StatelessWidget {
             height: 50,
             width: double.infinity,
             padding: const EdgeInsets.all(6),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.vertical(bottom: Radius.circular(12)),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              borderRadius: const BorderRadius.vertical(bottom: Radius.circular(12)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -176,11 +189,14 @@ class PopularProductsSection extends StatelessWidget {
                     const Spacer(),
                     Row(
                       children: [
-                        const Icon(Icons.favorite, size: 12, color: Colors.red),
+                        Icon(Icons.favorite, size: 12, color: Theme.of(context).colorScheme.primary),
                         const SizedBox(width: 2),
                         Text(
                           '${product.favoriteUserIds.length}',
-                          style: const TextStyle(fontSize: 9, color: Colors.grey),
+                          style: TextStyle(
+                            fontSize: 9,
+                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                          ),
                         ),
                       ],
                     ),

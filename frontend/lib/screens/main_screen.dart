@@ -21,6 +21,8 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
   User? _user;
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
 
   @override
   void initState() {
@@ -118,13 +120,30 @@ class _MainScreenState extends State<MainScreen> {
     return SingleChildScrollView(
       child: Column(
         children: [
+          // 검색바
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            child: TextField(
+              controller: _searchController,
+              decoration: const InputDecoration(
+                hintText: '검색어를 입력하세요 (예: 사탕)',
+                prefixIcon: Icon(Icons.search),
+              ),
+              onChanged: (value) {
+                setState(() {
+                  _searchQuery = value;
+                });
+              },
+            ),
+          ),
+
           // 우리동네 소식
-          const NewsSection(),
+          NewsSection(searchQuery: _searchQuery),
           
           const SizedBox(height: 24),
           
           // 인기있는 물품
-          const PopularProductsSection(),
+          PopularProductsSection(searchQuery: _searchQuery),
           
           const SizedBox(height: 24),
           
