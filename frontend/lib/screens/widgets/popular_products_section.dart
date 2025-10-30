@@ -7,6 +7,7 @@ class PopularProductsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tossPrimary = Theme.of(context).colorScheme.primary;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
@@ -16,12 +17,12 @@ class PopularProductsSection extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              Text(
                 '인기있는 물품',
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFFFF6B35),
+                  color: tossPrimary,
                 ),
               ),
               TextButton(
@@ -31,10 +32,10 @@ class PopularProductsSection extends StatelessWidget {
                     const SnackBar(content: Text('더 많은 상품을 곧 만나보세요!')),
                   );
                 },
-                child: const Text(
+                child: Text(
                   '더보기',
                   style: TextStyle(
-                    color: Color(0xFFFF6B35),
+                    color: tossPrimary,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -87,7 +88,7 @@ class PopularProductsSection extends StatelessWidget {
                   scrollDirection: Axis.horizontal,
                   itemCount: popularProducts.length,
                   itemBuilder: (context, index) {
-                    return _buildProductCard(popularProducts[index]);
+                    return _buildProductCard(popularProducts[index], tossPrimary);
                   },
                 ),
               );
@@ -98,7 +99,7 @@ class PopularProductsSection extends StatelessWidget {
     );
   }
 
-  Widget _buildProductCard(Product product) {
+  Widget _buildProductCard(Product product, Color tossPrimary) {
     return Container(
       width: 200,
       margin: const EdgeInsets.only(right: 12),
@@ -166,9 +167,9 @@ class PopularProductsSection extends StatelessWidget {
                   children: [
                     Text(
                       '${product.price.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}원',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 9,
-                        color: Color(0xFFFF6B35),
+                        color: tossPrimary,
                         fontWeight: FontWeight.bold,
                       ),
                     ),

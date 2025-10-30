@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import '../../services/product_service.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'dart:typed_data'; // Added for Uint8List
 
 class ProductFormScreen extends StatefulWidget {
   const ProductFormScreen({super.key});
@@ -16,6 +18,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
   final _priceController = TextEditingController();
   String _selectedRegion = '대전 동구';
   bool _isLoading = false;
+  List<XFile> _selectedImages = [];
 
   final List<String> _regions = [
     '대전 동구',
@@ -33,31 +36,60 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
     super.dispose();
   }
 
+  Future<void> _pickImages() async {
+    final ImagePicker picker = ImagePicker();
+    final List<XFile> images = await picker.pickMultiImage();
+    if (images.length > 3) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('사진은 최대 3장까지 선택할 수 있습니다.'),
+        backgroundColor: Colors.redAccent,
+      ));
+      setState(() { _selectedImages = images.take(3).toList(); });
+    } else {
+      setState(() { _selectedImages = images; });
+    }
+  }
+
+  Future<List<String>> _uploadImagesAndGetUrls() async {
+    if (_selectedImages.isEmpty) return [];
+    final urls = <String>[];
+    for (final file in _selectedImages) {
+      final ref = FirebaseStorage.instance
+        .ref('products/${DateTime.now().millisecondsSinceEpoch}_${file.name}');
+      await ref.putData(await file.readAsBytes());
+      final url = await ref.getDownloadURL();
+      urls.add(url);
+    }
+    return urls;
+  }
+
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) return;
+    
+    // 사진 필수 체크 로직 제거
+    // if (_selectedImages.isEmpty) {
+    //   ScaffoldMessenger.of(context).showSnackBar(
+    //     SnackBar(content: Text('사진을 반드시 1장 이상 추가해주세요.'), backgroundColor: Colors.redAccent),
+    //   );
+    //   return;
+    // }
 
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() { _isLoading = true; });
 
     try {
       final price = int.parse(_priceController.text);
-      
+      final imageUrls = await _uploadImagesAndGetUrls();
       await ProductService.createProduct(
         title: _titleController.text.trim(),
         description: _descriptionController.text.trim(),
         price: price,
-        imageUrls: [], // 이미지 업로드 기능은 추후 구현
+        imageUrls: imageUrls,
         region: _selectedRegion,
       );
-
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('상품이 등록되었습니다!'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('상품이 등록되었습니다!'), backgroundColor: Colors.green,
+        ));
         Navigator.pop(context);
       }
     } catch (e) {
@@ -68,9 +100,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
       }
     } finally {
       if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
+        setState(() { _isLoading = false; });
       }
     }
   }
@@ -79,9 +109,9 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color(0xFFFF6B35),
-        foregroundColor: Colors.white,
-        title: const Text('상품 등록'),
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        foregroundColor: Theme.of(context).colorScheme.primary,
+        title: Text('상품 등록', style: TextStyle(color: Theme.of(context).colorScheme.primary)),
       ),
       body: Form(
         key: _formKey,
@@ -91,22 +121,22 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // 상품명
-              const Text(
+              Text(
                 '상품명',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFFFF6B35),
+                  color: Theme.of(context).colorScheme.primary,
                 ),
               ),
               const SizedBox(height: 8),
               TextFormField(
                 controller: _titleController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   hintText: '상품명을 입력해주세요',
-                  border: OutlineInputBorder(),
+                  border: const OutlineInputBorder(),
                   focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Color(0xFFFF6B35)),
+                    borderSide: BorderSide(color: Theme.of(context).colorScheme.primary),
                   ),
                 ),
                 validator: (value) {
@@ -119,23 +149,23 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
               const SizedBox(height: 24),
 
               // 가격
-              const Text(
+              Text(
                 '가격',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFFFF6B35),
+                  color: Theme.of(context).colorScheme.primary,
                 ),
               ),
               const SizedBox(height: 8),
               TextFormField(
                 controller: _priceController,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   hintText: '가격을 입력해주세요 (원)',
-                  border: OutlineInputBorder(),
+                  border: const OutlineInputBorder(),
                   focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Color(0xFFFF6B35)),
+                    borderSide: BorderSide(color: Theme.of(context).colorScheme.primary),
                   ),
                 ),
                 validator: (value) {
@@ -152,12 +182,12 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
               const SizedBox(height: 24),
 
               // 지역
-              const Text(
+              Text(
                 '지역',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFFFF6B35),
+                  color: Theme.of(context).colorScheme.primary,
                 ),
               ),
               const SizedBox(height: 8),
@@ -192,24 +222,99 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
               ),
               const SizedBox(height: 24),
 
+              // 상품 사진 (최대 3장)
+              Text(
+                '상품 사진 (최대 3장)',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: _isLoading ? null : _pickImages,
+                    icon: Icon(Icons.add_photo_alternate),
+                    label: Text('사진 선택'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text('선택: ${_selectedImages.length}/3'),
+                ],
+              ),
+              const SizedBox(height: 8),
+              SizedBox(
+                height: 90,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  separatorBuilder: (_, __) => const SizedBox(width: 8),
+                  itemCount: _selectedImages.length,
+                  itemBuilder: (context, idx) {
+                    final img = _selectedImages[idx];
+                    return FutureBuilder<Uint8List>(
+                      future: img.readAsBytes(),
+                      builder: (context, snapshot) {
+                        if (!snapshot.hasData) {
+                          return Container(
+                            width: 90, height: 90,
+                            alignment: Alignment.center,
+                            child: const CircularProgressIndicator(strokeWidth: 2),
+                          );
+                        }
+                        return Stack(
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: Image.memory(
+                                snapshot.data!,
+                                width: 90, height: 90, fit: BoxFit.cover,
+                              ),
+                            ),
+                            Positioned(
+                              top: 2, right: 2,
+                              child: InkWell(
+                                onTap: _isLoading ? null : () => setState(() { _selectedImages.removeAt(idx); }),
+                                child: Container(
+                                  padding: const EdgeInsets.all(3),
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withOpacity(0.5),
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: const Icon(Icons.close, color: Colors.white, size: 18),
+                                ),
+                              ),
+                            )
+                          ],
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 24),
+
               // 상품 설명
-              const Text(
+              Text(
                 '상품 설명',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFFFF6B35),
+                  color: Theme.of(context).colorScheme.primary,
                 ),
               ),
               const SizedBox(height: 8),
               TextFormField(
                 controller: _descriptionController,
                 maxLines: 5,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   hintText: '상품에 대한 자세한 설명을 입력해주세요',
-                  border: OutlineInputBorder(),
+                  border: const OutlineInputBorder(),
                   focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Color(0xFFFF6B35)),
+                    borderSide: BorderSide(color: Theme.of(context).colorScheme.primary),
                   ),
                 ),
                 validator: (value) {
@@ -227,7 +332,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                 child: ElevatedButton(
                   onPressed: _isLoading ? null : _submitForm,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFFF6B35),
+                    backgroundColor: Theme.of(context).colorScheme.primary,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(

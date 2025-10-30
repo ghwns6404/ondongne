@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import '../../models/product.dart';
 import '../../services/product_service.dart';
 import 'widgets/marketplace_filters.dart';
@@ -23,6 +22,7 @@ class _MarketplaceTabState extends State<MarketplaceTab> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.surface,
       body: Column(
         children: [
           // 필터 섹션
@@ -60,10 +60,10 @@ class _MarketplaceTabState extends State<MarketplaceTab> {
                 final products = snapshot.data ?? [];
                 
                 if (products.isEmpty) {
-                  return const Center(
+                  return Center(
                     child: Text(
                       '등록된 상품이 없습니다',
-                      style: TextStyle(fontSize: 16, color: Colors.grey),
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Colors.grey),
                     ),
                   );
                 }
@@ -100,7 +100,7 @@ class _MarketplaceTabState extends State<MarketplaceTab> {
             ),
           );
         },
-        backgroundColor: const Color(0xFFFF6B35),
+        backgroundColor: Theme.of(context).colorScheme.primary,
         child: const Icon(Icons.add, color: Colors.white),
       ),
     );

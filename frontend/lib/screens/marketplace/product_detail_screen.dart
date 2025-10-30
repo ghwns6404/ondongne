@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../models/product.dart';
 import '../../services/product_service.dart';
+import '../../services/chat_service.dart';
+import '../../services/user_service.dart';
+import '../chat/chat_detail_screen.dart';
 
 class ProductDetailScreen extends StatelessWidget {
   final Product product;
@@ -19,9 +22,9 @@ class ProductDetailScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color(0xFFFF6B35),
-        foregroundColor: Colors.white,
-        title: const Text('상품 상세'),
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        foregroundColor: Theme.of(context).colorScheme.primary,
+        title: Text('상품 상세', style: TextStyle(color: Theme.of(context).colorScheme.primary)),
         actions: [
           IconButton(
             onPressed: () {
@@ -29,7 +32,7 @@ class ProductDetailScreen extends StatelessWidget {
             },
             icon: Icon(
               isFavorited ? Icons.favorite : Icons.favorite_border,
-              color: isFavorited ? Colors.red : Colors.white,
+              color: isFavorited ? Colors.red : Theme.of(context).colorScheme.primary,
             ),
           ),
         ],
@@ -80,10 +83,10 @@ class ProductDetailScreen extends StatelessWidget {
                   const SizedBox(height: 8),
                   Text(
                     '${product.price.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}원',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFFFF6B35),
+                      color: Theme.of(context).colorScheme.primary,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -150,7 +153,7 @@ class ProductDetailScreen extends StatelessWidget {
                         );
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue,
+                        backgroundColor: Theme.of(context).colorScheme.primary,
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                       ),
@@ -179,14 +182,39 @@ class ProductDetailScreen extends StatelessWidget {
               child: SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () {
-                    // 채팅 기능 (추후 구현)
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('채팅 기능은 곧 추가됩니다')),
-                    );
+                  onPressed: () async {
+                    if (currentUser == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('채팅을 시작하려면 로그인이 필요합니다.')),
+                      );
+                      return;
+                    }
+                    if (isMyProduct) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('자신과는 채팅할 수 없습니다.')),
+                      );
+                      return;
+                    }
+                    
+                    // 채팅방 생성 또는 가져오기
+                    final chatRoomId = await ChatService.getOrCreateChatRoom(product.sellerId);
+                    final seller = await UserService.getUser(product.sellerId);
+                    final sellerName = seller?.name ?? '판매자';
+
+                    if (context.mounted) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ChatDetailScreen(
+                            chatRoomId: chatRoomId,
+                            otherUserName: sellerName,
+                          ),
+                        ),
+                      );
+                    }
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFFF6B35),
+                    backgroundColor: Theme.of(context).colorScheme.primary,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),

@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../models/user.dart';
 
 class UserService {
   static final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -23,13 +24,25 @@ class UserService {
     }, SetOptions(merge: true));
   }
 
+  // 특정 사용자 정보 가져오기
+  static Future<UserModel?> getUser(String uid) async {
+    final doc = await _col.doc(uid).get();
+    if (doc.exists) {
+      return UserModel.fromDoc(doc);
+    }
+    return null;
+  }
+
   // 현재 사용자 정보 가져오기
-  static Future<Map<String, dynamic>?> getCurrentUser() async {
+  static Future<UserModel?> getCurrentUserModel() async {
     final user = _auth.currentUser;
     if (user == null) return null;
 
     final doc = await _col.doc(user.uid).get();
-    return doc.data();
+    if (doc.exists) {
+      return UserModel.fromDoc(doc);
+    }
+    return null;
   }
 
   // Admin 권한 확인 (이메일 안전장치 포함)

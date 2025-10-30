@@ -96,10 +96,10 @@ class ProductCard extends StatelessWidget {
                         children: [
                           Text(
                             '${product.price.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}원',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFFFF6B35),
+                              color: Theme.of(context).colorScheme.primary,
                             ),
                           ),
                           IconButton(

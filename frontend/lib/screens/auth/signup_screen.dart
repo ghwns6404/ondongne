@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../services/user_service.dart';
 import '../main_screen.dart';
 
@@ -97,19 +96,22 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: scheme.surface,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: scheme.surface,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back),
+          color: scheme.onSurface,
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
+        title: Text(
           '회원가입',
-          style: TextStyle(
-            color: Colors.black,
+          style: textTheme.titleLarge?.copyWith(
+            color: scheme.onSurface,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -124,78 +126,50 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SizedBox(height: 20),
-                  
-                  // 이름 입력
+                  // 이름
                   TextFormField(
                     controller: _nameController,
                     decoration: const InputDecoration(
                       labelText: '이름',
                       prefixIcon: Icon(Icons.person),
-                      border: OutlineInputBorder(),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Color(0xFFFF6B35)),
-                      ),
                     ),
                     validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return '이름을 입력해주세요';
-                      }
-                      if (value.length < 2) {
-                        return '이름은 2자 이상이어야 합니다';
-                      }
+                      if (value == null || value.isEmpty) return '이름을 입력해주세요';
+                      if (value.length < 2) return '이름은 2자 이상이어야 합니다';
                       return null;
                     },
                   ),
                   const SizedBox(height: 16),
-                  
-                  // 이메일 입력
+                  // 이메일
                   TextFormField(
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
                     decoration: const InputDecoration(
                       labelText: '이메일',
                       prefixIcon: Icon(Icons.email),
-                      border: OutlineInputBorder(),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Color(0xFFFF6B35)),
-                      ),
                     ),
                     validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return '이메일을 입력해주세요';
-                      }
-                      if (!value.contains('@')) {
-                        return '올바른 이메일 형식을 입력해주세요';
-                      }
+                      if (value == null || value.isEmpty) return '이메일을 입력해주세요';
+                      if (!value.contains('@')) return '올바른 이메일 형식을 입력해주세요';
                       return null;
                     },
                   ),
                   const SizedBox(height: 16),
-                  
-                  // 비밀번호 입력
+                  // 비밀번호
                   TextFormField(
                     controller: _passwordController,
                     obscureText: true,
                     decoration: const InputDecoration(
                       labelText: '비밀번호',
                       prefixIcon: Icon(Icons.lock),
-                      border: OutlineInputBorder(),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Color(0xFFFF6B35)),
-                      ),
                     ),
                     validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return '비밀번호를 입력해주세요';
-                      }
-                      if (value.length < 6) {
-                        return '비밀번호는 6자 이상이어야 합니다';
-                      }
+                      if (value == null || value.isEmpty) return '비밀번호를 입력해주세요';
+                      if (value.length < 6) return '비밀번호는 6자 이상이어야 합니다';
                       return null;
                     },
                   ),
                   const SizedBox(height: 16),
-                  
                   // 비밀번호 확인
                   TextFormField(
                     controller: _confirmPasswordController,
@@ -203,42 +177,22 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     decoration: const InputDecoration(
                       labelText: '비밀번호 확인',
                       prefixIcon: Icon(Icons.lock_outline),
-                      border: OutlineInputBorder(),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Color(0xFFFF6B35)),
-                      ),
                     ),
                     validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return '비밀번호 확인을 입력해주세요';
-                      }
-                      if (value != _passwordController.text) {
-                        return '비밀번호가 일치하지 않습니다';
-                      }
+                      if (value == null || value.isEmpty) return '비밀번호 확인을 입력해주세요';
+                      if (value != _passwordController.text) return '비밀번호가 일치하지 않습니다';
                       return null;
                     },
                   ),
                   const SizedBox(height: 32),
-                  
                   // 회원가입 버튼
                   ElevatedButton(
                     onPressed: _isLoading ? null : _signUp,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFFF6B35),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
                     child: _isLoading
                         ? const SizedBox(
                             height: 20,
                             width: 20,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2,
-                            ),
+                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                           )
                         : const Text(
                             '회원가입',
@@ -246,14 +200,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           ),
                   ),
                   const SizedBox(height: 16),
-                  
-                  // 이용약관 동의
+                  // 안내문구
                   const Text(
                     '회원가입 시 온동네 이용약관 및 개인정보처리방침에 동의하게 됩니다.',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey,
-                    ),
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
                     textAlign: TextAlign.center,
                   ),
                 ],

@@ -83,8 +83,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: scheme.surface,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
@@ -95,32 +97,24 @@ class _LoginScreenState extends State<LoginScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // 앱 로고/제목
-                const Icon(
-                  Icons.local_grocery_store,
+                Icon(
+                  Icons.account_balance_wallet_rounded,
                   size: 80,
-                  color: Color(0xFFFF6B35),
+                  color: scheme.primary,
                 ),
                 const SizedBox(height: 16),
-                const Text(
+                Text(
                   '온동네',
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFFFF6B35),
-                  ),
+                  style: textTheme.displayLarge?.copyWith(color: scheme.primary, fontSize: 28),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
-                const Text(
+                Text(
                   '우리 동네 중고거래 & 커뮤니티',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey,
-                  ),
+                  style: textTheme.bodyLarge?.copyWith(color: Colors.grey, fontSize: 15),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 48),
-                
                 // 이메일 입력
                 TextFormField(
                   controller: _emailController,
@@ -128,10 +122,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   decoration: const InputDecoration(
                     labelText: '이메일',
                     prefixIcon: Icon(Icons.email),
-                    border: OutlineInputBorder(),
-                    focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: Color(0xFFFF6B35)),
-                    ),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
@@ -144,7 +134,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   },
                 ),
                 const SizedBox(height: 16),
-                
                 // 비밀번호 입력
                 TextFormField(
                   controller: _passwordController,
@@ -152,10 +141,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   decoration: const InputDecoration(
                     labelText: '비밀번호',
                     prefixIcon: Icon(Icons.lock),
-                    border: OutlineInputBorder(),
-                    focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: Color(0xFFFF6B35)),
-                    ),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
@@ -168,18 +153,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   },
                 ),
                 const SizedBox(height: 24),
-                
                 // 로그인 버튼
                 ElevatedButton(
                   onPressed: _isLoading ? null : _login,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFFF6B35),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
                   child: _isLoading
                       ? const SizedBox(
                           height: 20,
@@ -195,7 +171,6 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                 ),
                 const SizedBox(height: 16),
-                
                 // 회원가입 링크
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -208,10 +183,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           MaterialPageRoute(builder: (context) => const SignUpScreen()),
                         );
                       },
-                      child: const Text(
+                      child: Text(
                         '회원가입',
                         style: TextStyle(
-                          color: Color(0xFFFF6B35),
+                          color: scheme.primary,
                           fontWeight: FontWeight.bold,
                         ),
                       ),

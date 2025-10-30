@@ -15,10 +15,12 @@ class NewsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
         title: const Text('소식'),
-        backgroundColor: const Color(0xFF4CAF50),
-        foregroundColor: Colors.white,
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        foregroundColor: Theme.of(context).colorScheme.onSurface,
+        elevation: 0,
       ),
       body: Column(
         children: [
@@ -35,9 +37,9 @@ class NewsScreen extends StatelessWidget {
         stream: UserService.watchIsAdmin(),
         builder: (context, snapshot) {
           final isAdmin = snapshot.data ?? false;
-          
+          final blue = Theme.of(context).colorScheme.primary;
+          final gray = Colors.grey[200];
           if (isAdmin) {
-            // 관리자: 뉴스&이벤트 + 글쓰기
             return Stack(
               children: [
                 Positioned(
@@ -49,7 +51,7 @@ class NewsScreen extends StatelessWidget {
                         MaterialPageRoute(builder: (context) => const AdminNewsFormScreen()),
                       );
                     },
-                    backgroundColor: const Color(0xFFFF6B35),
+                    backgroundColor: blue,
                     heroTag: "admin_news",
                     child: const Icon(Icons.campaign, color: Colors.white),
                   ),
@@ -63,22 +65,21 @@ class NewsScreen extends StatelessWidget {
                         MaterialPageRoute(builder: (context) => const NewsFormScreen()),
                       );
                     },
-                    backgroundColor: const Color(0xFF4CAF50),
+                    backgroundColor: gray,
                     heroTag: "general_news",
-                    child: const Icon(Icons.edit, color: Colors.white),
+                    child: const Icon(Icons.edit, color: Colors.black),
                   ),
                 ),
               ],
             );
           } else {
-            // 일반 사용자: 글쓰기만
             return FloatingActionButton(
               onPressed: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(builder: (context) => const NewsFormScreen()),
                 );
               },
-              backgroundColor: const Color(0xFF4CAF50),
+              backgroundColor: blue,
               child: const Icon(Icons.edit, color: Colors.white),
             );
           }
@@ -89,11 +90,12 @@ class NewsScreen extends StatelessWidget {
 
   // 상단: 뉴스&이벤트 섹션
   Widget _buildAdminNewsSection(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
     return Container(
       height: 200,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFFF6B35).withOpacity(0.05),
+        color: primary.withOpacity(0.05),
         border: Border(
           bottom: BorderSide(color: Colors.grey[300]!, width: 1),
         ),
@@ -103,14 +105,14 @@ class NewsScreen extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.campaign, color: Color(0xFFFF6B35), size: 20),
+              Icon(Icons.campaign, color: primary, size: 20),
               const SizedBox(width: 8),
-              const Text(
+              Text(
                 '지역 뉴스&이벤트',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFFFF6B35),
+                  color: primary,
                 ),
               ),
             ],
@@ -123,22 +125,18 @@ class NewsScreen extends StatelessWidget {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
                 }
-                
                 if (snapshot.hasError) {
                   return const Center(child: Text('오류가 발생했습니다'));
                 }
-                
                 final adminNewsList = snapshot.data ?? [];
-                
                 if (adminNewsList.isEmpty) {
-                  return const Center(
+                  return Center(
                     child: Text(
                       '등록된 뉴스&이벤트가 없습니다',
-                      style: TextStyle(color: Colors.grey),
+                      style: TextStyle(color: Colors.grey[600]),
                     ),
                   );
                 }
-                
                 return ListView.builder(
                   scrollDirection: Axis.horizontal,
                   itemCount: adminNewsList.length,
@@ -153,7 +151,7 @@ class NewsScreen extends StatelessWidget {
                           ),
                         );
                       },
-                      child: _buildAdminNewsCard(adminNewsList[index]),
+                      child: _buildAdminNewsCard(adminNewsList[index], primary),
                     );
                   },
                 );
@@ -231,14 +229,14 @@ class NewsScreen extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF4CAF50).withOpacity(0.1),
+                          color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
                           news.region,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
-                            color: Color(0xFF4CAF50),
+                            color: Theme.of(context).colorScheme.primary,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -284,54 +282,45 @@ class NewsScreen extends StatelessWidget {
   }
 
   // 뉴스&이벤트 카드
-  Widget _buildAdminNewsCard(AdminNews adminNews) {
+  Widget _buildAdminNewsCard(AdminNews adminNews, Color primary) {
     return Container(
       width: 280,
       margin: const EdgeInsets.only(right: 12),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
-        color: const Color(0xFFFF6B35).withOpacity(0.1),
-        border: Border.all(color: const Color(0xFFFF6B35).withOpacity(0.3)),
+        color: primary.withOpacity(0.1),
+        border: Border.all(color: primary.withOpacity(0.3)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 제목
             Text(
               adminNews.title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFFFF6B35),
+                color: primary,
               ),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
-            
             const SizedBox(height: 8),
-            
             // 지역
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: const Color(0xFFFF6B35),
+                color: primary,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
                 adminNews.region,
-                style: const TextStyle(
-                  fontSize: 10,
-                  color: Colors.white,
-                  fontWeight: FontWeight.w500,
-                ),
+                style: TextStyle(
+                  fontSize: 10, color: Colors.white, fontWeight: FontWeight.w500),
               ),
             ),
-            
             const Spacer(),
-            
-            // 하단 정보
             Row(
               children: [
                 const Icon(Icons.favorite, size: 14, color: Colors.red),

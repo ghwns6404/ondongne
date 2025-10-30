@@ -22,6 +22,7 @@ class MarketplaceFilters extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tossPrimary = Theme.of(context).colorScheme.primary;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -37,22 +38,17 @@ class MarketplaceFilters extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // 지역 필터
-          _buildRegionFilter(),
+          _buildRegionFilter(tossPrimary),
           const SizedBox(height: 16),
-          
-          // 가격 필터
-          _buildPriceFilter(),
+          _buildPriceFilter(tossPrimary),
           const SizedBox(height: 16),
-          
-          // 즐겨찾기 토글
-          _buildFavoritesToggle(),
+          _buildFavoritesToggle(tossPrimary),
         ],
       ),
     );
   }
 
-  Widget _buildRegionFilter() {
+  Widget _buildRegionFilter(Color tossPrimary) {
     final regions = [
       '대전 전체',
       '대전 동구',
@@ -61,16 +57,15 @@ class MarketplaceFilters extends StatelessWidget {
       '대전 대덕구',
       '대전 유성구',
     ];
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           '지역',
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
-            color: Color(0xFFFF6B35),
+            color: tossPrimary,
           ),
         ),
         const SizedBox(height: 8),
@@ -105,22 +100,21 @@ class MarketplaceFilters extends StatelessWidget {
     );
   }
 
-  Widget _buildPriceFilter() {
+  Widget _buildPriceFilter(Color tossPrimary) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           '가격',
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
-            color: Color(0xFFFF6B35),
+            color: tossPrimary,
           ),
         ),
         const SizedBox(height: 8),
         Row(
           children: [
-            // 최소 가격
             Expanded(
               child: TextField(
                 keyboardType: TextInputType.number,
@@ -133,7 +127,7 @@ class MarketplaceFilters extends StatelessWidget {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(color: Color(0xFFFF6B35)),
+                    borderSide: BorderSide(color: tossPrimary),
                   ),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                 ),
@@ -143,14 +137,9 @@ class MarketplaceFilters extends StatelessWidget {
                 },
               ),
             ),
-            
             const SizedBox(width: 8),
-            
             const Text('~', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey)),
-            
             const SizedBox(width: 8),
-            
-            // 최대 가격
             Expanded(
               child: TextField(
                 keyboardType: TextInputType.number,
@@ -163,7 +152,7 @@ class MarketplaceFilters extends StatelessWidget {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(color: Color(0xFFFF6B35)),
+                    borderSide: BorderSide(color: tossPrimary),
                   ),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                 ),
@@ -179,23 +168,23 @@ class MarketplaceFilters extends StatelessWidget {
     );
   }
 
-  Widget _buildFavoritesToggle() {
+  Widget _buildFavoritesToggle(Color tossPrimary) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        const Text(
+        Text(
           '내 즐겨찾기',
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
-            color: Color(0xFFFF6B35),
+            color: tossPrimary,
           ),
         ),
         Switch(
           value: showFavoritesOnly,
           onChanged: onFavoritesChanged,
-          activeColor: const Color(0xFFFF6B35),
-          activeTrackColor: const Color(0xFFFF6B35).withOpacity(0.3),
+          activeThumbColor: tossPrimary,
+          activeTrackColor: tossPrimary.withOpacity(0.3),
           inactiveThumbColor: Colors.grey[300],
           inactiveTrackColor: Colors.grey[200],
         ),

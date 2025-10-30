@@ -12,12 +12,13 @@ class BottomNavigation extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: scheme.surface,
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withOpacity(0.08),
             spreadRadius: 1,
             blurRadius: 5,
             offset: const Offset(0, -2),
@@ -28,9 +29,9 @@ class BottomNavigation extends StatelessWidget {
         type: BottomNavigationBarType.fixed,
         currentIndex: currentIndex,
         onTap: onTap,
-        selectedItemColor: const Color(0xFFFF6B35),
+        selectedItemColor: scheme.primary,
         unselectedItemColor: Colors.grey,
-        backgroundColor: Colors.white,
+        backgroundColor: scheme.surface,
         elevation: 0,
         items: const [
           BottomNavigationBarItem(

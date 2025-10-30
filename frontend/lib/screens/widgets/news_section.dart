@@ -9,6 +9,7 @@ class NewsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tossPrimary = Theme.of(context).colorScheme.primary;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
@@ -18,12 +19,12 @@ class NewsSection extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              Text(
                 '우리동네 소식',
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFFFF6B35),
+                  color: tossPrimary,
                 ),
               ),
               TextButton(
@@ -33,10 +34,10 @@ class NewsSection extends StatelessWidget {
                     const SnackBar(content: Text('더 많은 소식을 곧 만나보세요!')),
                   );
                 },
-                child: const Text(
+                child: Text(
                   '더보기',
                   style: TextStyle(
-                    color: Color(0xFFFF6B35),
+                    color: tossPrimary,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -88,7 +89,7 @@ class NewsSection extends StatelessWidget {
                   
                   // 뉴스&이벤트 카드들
                   for (final adminNews in adminNewsList.take(3)) {
-                    allNews.add(_buildAdminNewsCard(adminNews));
+                    allNews.add(_buildAdminNewsCard(adminNews, tossPrimary));
                   }
                   
                   // 일반 소식 카드들
@@ -116,14 +117,14 @@ class NewsSection extends StatelessWidget {
   }
 
   // Admin 뉴스&이벤트 카드
-  Widget _buildAdminNewsCard(AdminNews adminNews) {
+  Widget _buildAdminNewsCard(AdminNews adminNews, Color tossPrimary) {
     return Container(
       width: 200,
       margin: const EdgeInsets.only(right: 12),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
-        color: const Color(0xFFFF6B35).withOpacity(0.1),
-        border: Border.all(color: const Color(0xFFFF6B35).withOpacity(0.3)),
+        color: tossPrimary.withOpacity(0.1),
+        border: Border.all(color: tossPrimary.withOpacity(0.3)),
         boxShadow: [
           BoxShadow(
             color: Colors.grey.withOpacity(0.1),
@@ -142,7 +143,7 @@ class NewsSection extends StatelessWidget {
             child: Container(
               width: double.infinity,
               decoration: BoxDecoration(
-                color: const Color(0xFFFF6B35).withOpacity(0.1),
+                color: tossPrimary.withOpacity(0.05),
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
               ),
               child: adminNews.imageUrls.isNotEmpty
@@ -152,11 +153,11 @@ class NewsSection extends StatelessWidget {
                         adminNews.imageUrls.first,
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) {
-                          return const Icon(Icons.campaign, size: 40, color: Color(0xFFFF6B35));
+                          return Icon(Icons.campaign, size: 40, color: tossPrimary);
                         },
                       ),
                     )
-                  : const Icon(Icons.campaign, size: 40, color: Color(0xFFFF6B35)),
+                  : Icon(Icons.campaign, size: 40, color: tossPrimary),
             ),
           ),
           
@@ -172,10 +173,10 @@ class NewsSection extends StatelessWidget {
             child: Center(
               child: Text(
                 adminNews.title,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w500,
-                  color: Color(0xFFFF6B35),
+                  color: tossPrimary,
                 ),
                 textAlign: TextAlign.center,
                 maxLines: 2,
@@ -242,7 +243,7 @@ class NewsSection extends StatelessWidget {
             child: Center(
               child: Text(
                 news.title,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w500,
                 ),

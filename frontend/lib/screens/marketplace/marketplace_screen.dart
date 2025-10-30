@@ -12,44 +12,46 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color(0xFFFF6B35),
-        foregroundColor: Colors.white,
-        title: const Text(
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        foregroundColor: Theme.of(context).colorScheme.primary,
+        title: Text(
           '중고거래',
           style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 20,
+            color: Theme.of(context).colorScheme.primary,
           ),
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
+          color: Theme.of(context).colorScheme.primary,
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: const Center(
+      body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               Icons.shopping_cart,
               size: 64,
-              color: Colors.grey,
+              color: Colors.grey[400],
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             Text(
               '중고거래',
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
-                color: Colors.grey,
+                color: Colors.grey[700],
               ),
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             Text(
               '곧 만나볼 수 있습니다!',
               style: TextStyle(
                 fontSize: 16,
-                color: Colors.grey,
+                color: Colors.grey[500],
               ),
             ),
           ],
