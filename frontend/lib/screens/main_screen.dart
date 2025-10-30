@@ -8,6 +8,7 @@ import 'chat/chat_screen.dart'; // 수정: chat_screen.dart 임포트
 import 'widgets/top_app_bar.dart';
 import 'widgets/news_section.dart';
 import 'widgets/popular_products_section.dart';
+import 'widgets/trending_news_section.dart';
 import 'widgets/ad_banner.dart';
 import 'widgets/bottom_navigation.dart';
 
@@ -138,12 +139,31 @@ class _MainScreenState extends State<MainScreen> {
           ),
 
           // 우리동네 소식
-          NewsSection(searchQuery: _searchQuery),
+          NewsSection(
+            searchQuery: _searchQuery,
+            onMorePressed: () {
+              setState(() {
+                _currentIndex = 1; // 소식 탭
+              });
+            },
+          ),
           
           const SizedBox(height: 24),
           
+          // 좋아요 많은 소식
+          const TrendingNewsSection(),
+
+          const SizedBox(height: 24),
+
           // 인기있는 물품
-          PopularProductsSection(searchQuery: _searchQuery),
+          PopularProductsSection(
+            searchQuery: _searchQuery,
+            onMorePressed: () {
+              setState(() {
+                _currentIndex = 2; // 중고거래 탭
+              });
+            },
+          ),
           
           const SizedBox(height: 24),
           

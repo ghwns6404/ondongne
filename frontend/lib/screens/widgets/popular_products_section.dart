@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import '../../models/product.dart';
 import '../../services/product_service.dart';
+import '../marketplace/product_detail_screen.dart';
 
 class PopularProductsSection extends StatelessWidget {
   final String? searchQuery; // 옵션: 검색어
-  const PopularProductsSection({super.key, this.searchQuery});
+  final VoidCallback? onMorePressed; // 더보기 액션
+  const PopularProductsSection({super.key, this.searchQuery, this.onMorePressed});
 
   @override
   Widget build(BuildContext context) {
@@ -27,12 +29,7 @@ class PopularProductsSection extends StatelessWidget {
                 ),
               ),
               TextButton(
-                onPressed: () {
-                  // 더보기 기능 (미구현)
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('더 많은 상품을 곧 만나보세요!')),
-                  );
-                },
+                onPressed: onMorePressed,
                 child: Text(
                   '더보기',
                   style: TextStyle(
@@ -43,9 +40,9 @@ class PopularProductsSection extends StatelessWidget {
               ),
             ],
           ),
-          
+
           const SizedBox(height: 12),
-          
+
           // 실제 상품 데이터 (하트 개수 기준 정렬)
           StreamBuilder<List<Product>>(
             stream: ProductService.watchProducts(),
@@ -56,14 +53,14 @@ class PopularProductsSection extends StatelessWidget {
                   child: Center(child: CircularProgressIndicator()),
                 );
               }
-              
+
               if (snapshot.hasError) {
                 return const SizedBox(
                   height: 180,
                   child: Center(child: Text('오류가 발생했습니다')),
                 );
               }
-              
+
               final products = snapshot.data ?? [];
               final q = (searchQuery ?? '').trim().toLowerCase();
               final filtered = q.isEmpty
@@ -72,13 +69,13 @@ class PopularProductsSection extends StatelessWidget {
                       final title = p.title.toLowerCase();
                       return title.contains(q);
                     }).toList();
-              
+
               // 하트 개수 기준으로 정렬하고 상위 6개만 선택
               final popularProducts = filtered
-                ..sort((a, b) => b.favoriteUserIds.length.compareTo(a.favoriteUserIds.length))
-                ..take(6);
-              
-              if (popularProducts.isEmpty) {
+                ..sort((a, b) => b.favoriteUserIds.length.compareTo(a.favoriteUserIds.length));
+              final topPopularProducts = popularProducts.take(6).toList();
+
+              if (topPopularProducts.isEmpty) {
                 return const SizedBox(
                   height: 180,
                   child: Center(
@@ -86,14 +83,14 @@ class PopularProductsSection extends StatelessWidget {
                   ),
                 );
               }
-              
+
               return SizedBox(
                 height: 180,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
-                  itemCount: popularProducts.length,
+                  itemCount: topPopularProducts.length,
                   itemBuilder: (context, index) {
-                    return _buildProductCard(context, popularProducts[index], tossPrimary);
+                    return _buildProductCard(context, topPopularProducts[index], tossPrimary);
                   },
                 ),
               );
@@ -105,107 +102,116 @@ class PopularProductsSection extends StatelessWidget {
   }
 
   Widget _buildProductCard(BuildContext context, Product product, Color tossPrimary) {
-    return Container(
-      width: 200,
-      margin: const EdgeInsets.only(right: 12),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.06),
-            spreadRadius: 1,
-            blurRadius: 5,
-            offset: const Offset(0, 2),
+    return InkWell(
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => ProductDetailScreen(product: product),
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 상품 이미지
-          Expanded(
-            flex: 3,
-            child: Container(
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceVariant,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-              ),
-              child: product.imageUrls.isNotEmpty
-                  ? ClipRRect(
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-                      child: Image.network(
-                        product.imageUrls.first,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Icon(
-                            Icons.shopping_bag,
-                            size: 40,
-                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
-                          );
-                        },
-                      ),
-                    )
-                  : Icon(
-                      Icons.shopping_bag,
-                      size: 40,
-                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
-                    ),
+        );
+      },
+      child: Container(
+        width: 200,
+        margin: const EdgeInsets.only(right: 12),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.06),
+              spreadRadius: 1,
+              blurRadius: 5,
+              offset: const Offset(0, 2),
             ),
-          ),
-          
-          // 상품 정보
-          Container(
-            height: 50,
-            width: double.infinity,
-            padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
-              borderRadius: const BorderRadius.vertical(bottom: Radius.circular(12)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  product.title,
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 상품 이미지
+            Expanded(
+              flex: 3,
+              child: Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surfaceVariant,
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
                 ),
-                const SizedBox(height: 2),
-                Row(
-                  children: [
-                    Text(
-                      '${product.price.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}원',
-                      style: TextStyle(
-                        fontSize: 9,
-                        color: tossPrimary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const Spacer(),
-                    Row(
-                      children: [
-                        Icon(Icons.favorite, size: 12, color: Theme.of(context).colorScheme.primary),
-                        const SizedBox(width: 2),
-                        Text(
-                          '${product.favoriteUserIds.length}',
-                          style: TextStyle(
-                            fontSize: 9,
-                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-                          ),
+                child: product.imageUrls.isNotEmpty
+                    ? ClipRRect(
+                        borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                        child: Image.network(
+                          product.imageUrls.first,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Icon(
+                              Icons.shopping_bag,
+                              size: 40,
+                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+                            );
+                          },
                         ),
-                      ],
-                    ),
-                  ],
-                ),
-              ],
+                      )
+                    : Icon(
+                        Icons.shopping_bag,
+                        size: 40,
+                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+                      ),
+              ),
             ),
-          ),
-        ],
+
+            // 상품 정보
+            Container(
+              height: 50,
+              width: double.infinity,
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(12)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    product.title,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Row(
+                    children: [
+                      Text(
+                        '${product.price.toString().replaceAllMapped(RegExp(r"(\\d{1,3})(?=(\\d{3})+(?!\\d))"), (Match m) => "${m[1]},")}원',
+                        style: TextStyle(
+                          fontSize: 9,
+                          color: tossPrimary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const Spacer(),
+                      Row(
+                        children: [
+                          Icon(Icons.favorite, size: 12, color: Theme.of(context).colorScheme.primary),
+                          const SizedBox(width: 2),
+                          Text(
+                            '${product.favoriteUserIds.length}',
+                            style: TextStyle(
+                              fontSize: 9,
+                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
