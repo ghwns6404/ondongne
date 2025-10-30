@@ -108,7 +108,7 @@ class NewsScreen extends StatelessWidget {
               Icon(Icons.campaign, color: primary, size: 20),
               const SizedBox(width: 8),
               Text(
-                '지역 뉴스&이벤트',
+                '지역 뉴스&공지사항',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,

@@ -24,7 +24,7 @@ class NewsSection extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                '우리동네 소식',
+                '우리동네 소식 & 공지사항',
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,

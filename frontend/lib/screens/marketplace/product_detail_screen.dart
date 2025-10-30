@@ -17,8 +17,11 @@ class ProductDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final currentUser = FirebaseAuth.instance.currentUser;
-    final isFavorited = currentUser != null && product.favoriteUserIds.contains(currentUser.uid);
-    final isMyProduct = currentUser?.uid == product.sellerId;
+    final bool isFavorited =
+        currentUser != null && product.favoriteUserIds.contains(currentUser.uid);
+    // 오너 여부는 명확하게 현재 사용자 UID와 판매자 UID를 비교하여 결정
+    final bool isOwner =
+        currentUser != null && product.sellerId == currentUser.uid;
 
     return Scaffold(
       appBar: AppBar(
@@ -156,7 +159,7 @@ class ProductDetailScreen extends StatelessWidget {
           ],
         ),
       ),
-      bottomNavigationBar: isMyProduct
+      bottomNavigationBar: isOwner
           ? Container(
               padding: const EdgeInsets.all(16),
               child: Row(
@@ -206,7 +209,7 @@ class ProductDetailScreen extends StatelessWidget {
                       );
                       return;
                     }
-                    if (isMyProduct) {
+                    if (isOwner) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('자신과는 채팅할 수 없습니다.')),
                       );
