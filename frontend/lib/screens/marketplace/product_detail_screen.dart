@@ -91,6 +91,23 @@ class ProductDetailScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   
+                  // 작성자(판매자) 정보 (가입 이름)
+                  FutureBuilder(
+                    future: UserService.getUser(product.sellerId),
+                    builder: (context, snapshot) {
+                      final name = snapshot.data?.name ?? '판매자';
+                      return Row(
+                        children: [
+                          const Icon(Icons.person, size: 18, color: Colors.grey),
+                          const SizedBox(width: 6),
+                          Text(name, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                        ],
+                      );
+                    },
+                  ),
+
+                  const SizedBox(height: 8),
+
                   // 지역 정보
                   Row(
                     children: [

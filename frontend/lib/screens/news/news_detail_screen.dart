@@ -61,6 +61,23 @@ class NewsDetailScreen extends StatelessWidget {
                   
                   const SizedBox(height: 16),
                   
+                  // 작성자 정보 (가입 이름)
+                  FutureBuilder(
+                    future: UserService.getUser(news.authorId),
+                    builder: (context, snapshot) {
+                      final name = snapshot.data?.name ?? '작성자';
+                      return Row(
+                        children: [
+                          const Icon(Icons.person, size: 18, color: Colors.grey),
+                          const SizedBox(width: 6),
+                          Text(name, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                        ],
+                      );
+                    },
+                  ),
+
+                  const SizedBox(height: 12),
+
                   // 이미지 (있는 경우)
                   if (news.imageUrls.isNotEmpty)
                     Container(
