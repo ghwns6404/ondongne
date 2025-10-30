@@ -7,6 +7,8 @@
 
 ## ⚙️ 1. Flutter SDK 설치
 
+잠깐. JDK는 17권장합니다 그 이상은 호환 잘 안됨
+
 1. [Flutter 공식 설치 페이지](https://docs.flutter.dev/get-started/install/windows)에서 최신 버전의 `flutter_windows_[버전]-stable.zip` 파일을 다운로드합니다.  
 2. 압축을 원하는 폴더(예: `C:\src\flutter`)에 풉니다.  
    > ⚠️ **주의:** `C:\Program Files` 폴더는 관리자 권한 문제로 피하세요.
