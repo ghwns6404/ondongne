@@ -3,17 +3,25 @@ import 'package:flutter/material.dart';
 class TopAppBar extends StatelessWidget {
   final VoidCallback onChatbotPressed;
   final VoidCallback onNotificationPressed;
+  final String? dong;
+  final bool locLoading;
+  final String? locError;
+  final VoidCallback? onRefreshLocation;
 
   const TopAppBar({
     super.key,
     required this.onChatbotPressed,
     required this.onNotificationPressed,
+    this.dong,
+    this.locLoading = false,
+    this.locError,
+    this.onRefreshLocation,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         boxShadow: [
@@ -28,7 +36,7 @@ class TopAppBar extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // 로고
+          // 로고 + 내 동네
           Row(
             children: [
               Container(
@@ -52,6 +60,47 @@ class TopAppBar extends StatelessWidget {
                   color: Theme.of(context).colorScheme.primary,
                 ),
               ),
+              const SizedBox(width: 12),
+              if (locLoading)
+                Text(
+                  '내 동네 확인 중…',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                  ),
+                )
+              else if (locError != null)
+                Text(
+                  '내 동네: 알 수 없음',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                  ),
+                )
+              else if (dong != null)
+                Row(
+                  children: [
+                    Icon(Icons.place, size: 14, color: Theme.of(context).colorScheme.primary),
+                    const SizedBox(width: 4),
+                    Text(
+                      '내 동네: $dong',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                      ),
+                    ),
+                    if (onRefreshLocation != null) ...[
+                      const SizedBox(width: 4),
+                      IconButton(
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        icon: Icon(Icons.refresh, size: 16, color: Theme.of(context).colorScheme.primary),
+                        onPressed: locLoading ? null : onRefreshLocation,
+                        tooltip: '위치 새로고침',
+                      ),
+                    ],
+                  ],
+                ),
             ],
           ),
           

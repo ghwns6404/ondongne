@@ -185,7 +185,7 @@ class NewsSection extends StatelessWidget {
             Container(
               height: 50,
               width: double.infinity,
-              padding: const EdgeInsets.all(6),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
               decoration: const BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.vertical(bottom: Radius.circular(12)),
@@ -261,7 +261,7 @@ class NewsSection extends StatelessWidget {
             Container(
               height: 50,
               width: double.infinity,
-              padding: const EdgeInsets.all(6),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
               decoration: const BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.vertical(bottom: Radius.circular(12)),

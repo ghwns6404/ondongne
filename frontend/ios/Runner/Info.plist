@@ -45,5 +45,7 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+  <key>NSLocationWhenInUseUsageDescription</key>
+  <string>현재 위치를 사용하여 거주 동(洞) 인증을 진행합니다.</string>
 </dict>
 </plist>

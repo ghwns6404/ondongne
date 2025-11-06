@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/location_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'auth/login_screen.dart';
@@ -25,11 +26,40 @@ class _MainScreenState extends State<MainScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
+  String? _dong;          // 현재 동 이름
+  String? _locError;      // 위치/주소 에러 메시지
+  bool _locLoading = true; // 로딩 상태
+
   @override
   void initState() {
     super.initState();
     _user = FirebaseAuth.instance.currentUser;
+    _loadDong(); //  현재 동 로드
   }
+
+  //  추가: 동(행정동) 가져오기
+  Future<void> _loadDong() async {
+    setState(() {
+      _locLoading = true;
+      _locError = null;
+    });
+    try {
+      final dong = await LocationService.getCurrentDong();
+      if (!mounted) return;
+      setState(() {
+        _dong = dong;
+        _locLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _locError = e.toString();
+        _locLoading = false;
+      });
+    }
+  }
+
+  @override
 
   Future<void> _logout() async {
     try {
@@ -80,8 +110,13 @@ class _MainScreenState extends State<MainScreen> {
                   const SnackBar(content: Text('알림 기능은 곧 만나볼 수 있습니다!')),
                 );
               },
+              dong: _dong,
+              locLoading: _locLoading,
+              locError: _locError,
+              onRefreshLocation: _loadDong,
             ),
-            
+
+
             // 메인 콘텐츠 (탭에 따라 변경)
             Expanded(
               child: _buildCurrentPage(),
@@ -198,10 +233,12 @@ class _MainScreenState extends State<MainScreen> {
       builder: (context, snapshot) {
         if (snapshot.hasData && snapshot.data!.exists) {
           final userData = snapshot.data!.data() as Map<String, dynamic>;
+          final bottomExtra = MediaQuery.of(context).padding.bottom + 80;
           return Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              children: [
+            padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + bottomExtra),
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
                 // Toss 스타일 프로필 헤더
                 Container(
                   padding: const EdgeInsets.all(24),
@@ -214,13 +251,21 @@ class _MainScreenState extends State<MainScreen> {
                       CircleAvatar(
                         radius: 40,
                         backgroundColor: Colors.white,
-                        child: Text(
-                          userData['name']?.toString().substring(0, 1).toUpperCase() ?? 'U',
-                          style: TextStyle(
-                            color: scheme.primary,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 32,
-                          ),
+                        child: Builder(
+                          builder: (_) {
+                            final nameRaw = (userData['name'] as String?)?.trim() ?? '';
+                            final letter = nameRaw.isNotEmpty
+                                ? nameRaw.substring(0, 1).toUpperCase()
+                                : 'U';
+                            return Text(
+                              letter,
+                              style: TextStyle(
+                                color: scheme.primary,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 32,
+                              ),
+                            );
+                          },
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -241,7 +286,27 @@ class _MainScreenState extends State<MainScreen> {
                 _buildProfileInfo('가입일', '방금 전', scheme, textTheme),
                 _buildProfileInfo('상태', '온라인', scheme, textTheme),
                 _buildProfileInfo('이메일', userData['email'] ?? '', scheme, textTheme),
+                _buildProfileInfo('인증된 동네', (userData['verifiedDong'] ?? '-') as String, scheme, textTheme),
                 const SizedBox(height: 32),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pushNamed('/verify-location');
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: scheme.primary,
+                      foregroundColor: Colors.white,
+                      textStyle: const TextStyle(fontWeight: FontWeight.bold),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text('우리 동네 인증하기'),
+                  ),
+                ),
+                const SizedBox(height: 12),
                 // Toss 스타일 로그아웃 버튼
                 SizedBox(
                   width: double.infinity,
@@ -264,6 +329,7 @@ class _MainScreenState extends State<MainScreen> {
                 ),
               ],
             ),
+            )
           );
         }
         return const Center(

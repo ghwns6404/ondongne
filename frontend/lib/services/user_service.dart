@@ -24,6 +24,17 @@ class UserService {
     }, SetOptions(merge: true));
   }
 
+  // 동(洞) 인증 정보 저장
+  static Future<void> setVerifiedDong({
+    required String uid,
+    required String verifiedDong,
+  }) async {
+    await _col.doc(uid).set({
+      'verifiedDong': verifiedDong,
+      'verifiedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+
   // 특정 사용자 정보 가져오기
   static Future<UserModel?> getUser(String uid) async {
     final doc = await _col.doc(uid).get();

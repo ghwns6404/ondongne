@@ -5,6 +5,7 @@ import 'firebase_options.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/main_screen.dart';
 import 'theme/toss_theme.dart';
+import 'screens/verify/location_verify_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,6 +23,9 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: '온동네',
       theme: tossTheme,
+      routes: {
+        '/verify-location': (_) => const LocationVerifyScreen(),
+      },
       home: StreamBuilder<User?>(
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, snapshot) {

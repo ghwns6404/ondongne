@@ -17,10 +17,11 @@ class NewsScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
-        title: const Text('소식'),
+        title: const Text('소식', style: TextStyle(fontSize: 18)),
         backgroundColor: Theme.of(context).colorScheme.surface,
         foregroundColor: Theme.of(context).colorScheme.onSurface,
         elevation: 0,
+        toolbarHeight: 40,
       ),
       body: Column(
         children: [
@@ -92,8 +93,8 @@ class NewsScreen extends StatelessWidget {
   Widget _buildAdminNewsSection(BuildContext context) {
     final primary = Theme.of(context).colorScheme.primary;
     return Container(
-      height: 200,
-      padding: const EdgeInsets.all(16),
+      height: 92,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
         color: primary.withOpacity(0.05),
         border: Border(
@@ -105,19 +106,19 @@ class NewsScreen extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.campaign, color: primary, size: 20),
+              Icon(Icons.campaign, color: primary, size: 18),
               const SizedBox(width: 8),
               Text(
                 '지역 뉴스&공지사항',
                 style: TextStyle(
-                  fontSize: 18,
+                  fontSize: 15,
                   fontWeight: FontWeight.bold,
                   color: primary,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           Expanded(
             child: StreamBuilder<List<AdminNews>>(
               stream: AdminNewsService.watchAdminNews(),
@@ -217,10 +218,13 @@ class NewsScreen extends StatelessWidget {
                       
                       // 지역
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                         decoration: BoxDecoration(
                           color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(12),
+                        ),
+                        constraints: const BoxConstraints(
+                          maxWidth: double.infinity,
                         ),
                         child: Text(
                           news.region,
@@ -229,6 +233,8 @@ class NewsScreen extends StatelessWidget {
                             color: Theme.of(context).colorScheme.primary,
                             fontWeight: FontWeight.w500,
                           ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       
@@ -280,55 +286,82 @@ class NewsScreen extends StatelessWidget {
   // 뉴스&이벤트 카드
   Widget _buildAdminNewsCard(BuildContext context, AdminNews adminNews, Color primary) {
     return Container(
-      width: 280,
-      margin: const EdgeInsets.only(right: 12),
+      width: 220,
+      constraints: const BoxConstraints(
+        minHeight: 72,
+        maxHeight: 72,
+      ),
+      margin: const EdgeInsets.only(right: 10),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(10),
         color: primary.withOpacity(0.1),
         border: Border.all(color: Theme.of(context).dividerColor),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              adminNews.title,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: primary,
+            Flexible(
+              child: Text(
+                adminNews.title,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: primary,
+                  height: 1.15,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 3),
             // 지역
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
               decoration: BoxDecoration(
                 color: primary,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(6),
               ),
               child: Text(
                 adminNews.region,
                 style: TextStyle(
-                  fontSize: 10, color: Colors.white, fontWeight: FontWeight.w500),
+                  fontSize: 8, 
+                  color: Colors.white, 
+                  fontWeight: FontWeight.w500,
+                  height: 1.0,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
-            const Spacer(),
+            const SizedBox(height: 3),
             Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.favorite, size: 14, color: Colors.red),
-                const SizedBox(width: 4),
+                const Icon(Icons.favorite, size: 8, color: Colors.red),
+                const SizedBox(width: 2),
                 Text(
                   '${adminNews.favoriteUserIds.length}',
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  style: const TextStyle(
+                    fontSize: 8, 
+                    color: Colors.grey,
+                    height: 1.0,
+                  ),
                 ),
                 const Spacer(),
-                Text(
-                  _formatDate(adminNews.createdAt),
-                  style: const TextStyle(fontSize: 10, color: Colors.grey),
+                Flexible(
+                  child: Text(
+                    _formatDate(adminNews.createdAt),
+                    style: const TextStyle(
+                      fontSize: 7, 
+                      color: Colors.grey,
+                      height: 1.0,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ],
             ),
