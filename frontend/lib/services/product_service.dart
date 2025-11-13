@@ -60,6 +60,13 @@ class ProductService {
     await _col.doc(productId).delete();
   }
 
+  // ID로 단일 상품 조회
+  static Future<Product?> getProduct(String productId) async {
+    final doc = await _col.doc(productId).get();
+    if (!doc.exists) return null;
+    return Product.fromDoc(doc);
+  }
+
   // 즐겨찾기 토글
   static Future<void> toggleFavorite(String productId) async {
     final user = FirebaseAuth.instance.currentUser;

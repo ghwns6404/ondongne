@@ -6,6 +6,7 @@ import 'auth/login_screen.dart';
 import 'marketplace/marketplace_tab.dart';
 import 'news/news_screen.dart';
 import 'chat/chat_screen.dart'; // 수정: chat_screen.dart 임포트
+import 'chatbot/chatbot_screen.dart';
 import 'widgets/top_app_bar.dart';
 import 'widgets/news_section.dart';
 import 'widgets/popular_products_section.dart';
@@ -59,6 +60,34 @@ class _MainScreenState extends State<MainScreen> {
     }
   }
 
+  void _openChatbot() {
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: 'Chatbot',
+      barrierColor: Colors.black.withOpacity(0.5),
+      transitionDuration: const Duration(milliseconds: 300),
+      pageBuilder: (context, animation, secondaryAnimation) {
+        return Align(
+          alignment: Alignment.centerRight,
+          child: const ChatbotScreen(),
+        );
+      },
+      transitionBuilder: (context, animation, secondaryAnimation, child) {
+        return SlideTransition(
+          position: Tween<Offset>(
+            begin: const Offset(1, 0),
+            end: Offset.zero,
+          ).animate(CurvedAnimation(
+            parent: animation,
+            curve: Curves.easeInOut,
+          )),
+          child: child,
+        );
+      },
+    );
+  }
+
   @override
 
   Future<void> _logout() async {
@@ -99,10 +128,7 @@ class _MainScreenState extends State<MainScreen> {
             // 상단바 (항상 고정)
             TopAppBar(
               onChatbotPressed: () {
-                // 챗봇 기능 (미구현)
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('챗봇 기능은 곧 만나볼 수 있습니다!')),
-                );
+                _openChatbot();
               },
               onNotificationPressed: () {
                 // 알림 기능 (미구현)

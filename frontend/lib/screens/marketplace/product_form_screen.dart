@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../services/product_service.dart';
+import '../../services/storage_service.dart';
+import '../../services/profanity_filter_service.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:firebase_storage/firebase_storage.dart';
-import 'dart:typed_data'; // Added for Uint8List
+import 'dart:typed_data';
 
 class ProductFormScreen extends StatefulWidget {
   const ProductFormScreen({super.key});
@@ -18,6 +19,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
   final _priceController = TextEditingController();
   String _selectedRegion = '대전 동구';
   bool _isLoading = false;
+  String? _uploadProgress;
   List<XFile> _selectedImages = [];
 
   final List<String> _regions = [
@@ -52,50 +54,94 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
 
   Future<List<String>> _uploadImagesAndGetUrls() async {
     if (_selectedImages.isEmpty) return [];
-    final urls = <String>[];
-    for (final file in _selectedImages) {
-      final ref = FirebaseStorage.instance
-        .ref('products/${DateTime.now().millisecondsSinceEpoch}_${file.name}');
-      await ref.putData(await file.readAsBytes());
-      final url = await ref.getDownloadURL();
-      urls.add(url);
+    
+    try {
+      setState(() {
+        _uploadProgress = '이미지 업로드 중... (0/${_selectedImages.length})';
+      });
+      
+      final urls = await StorageService.uploadMultipleImages(
+        files: _selectedImages,
+        folder: 'products',
+        onProgress: (current, total) {
+          if (mounted) {
+            setState(() {
+              _uploadProgress = '이미지 업로드 중... ($current/$total)';
+            });
+          }
+        },
+      );
+      
+      if (mounted) {
+        setState(() {
+          _uploadProgress = null;
+        });
+      }
+      
+      if (urls.isEmpty) {
+        throw Exception('이미지 업로드에 실패했습니다. 네트워크 연결을 확인하고 다시 시도해주세요.');
+      }
+      
+      return urls;
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _uploadProgress = null;
+        });
+      }
+      
+      // 더 구체적인 에러 메시지 제공
+      String errorMessage = '이미지 업로드 중 오류가 발생했습니다.';
+      if (e.toString().contains('permission') || e.toString().contains('권한')) {
+        errorMessage = 'Firebase Storage 권한이 없습니다. Firebase 콘솔에서 Storage 규칙을 확인해주세요.';
+      } else if (e.toString().contains('network') || e.toString().contains('네트워크')) {
+        errorMessage = '네트워크 연결을 확인하고 다시 시도해주세요.';
+      } else if (e.toString().contains('size') || e.toString().contains('크기')) {
+        errorMessage = '이미지 파일 크기가 너무 큽니다. 더 작은 이미지를 선택해주세요.';
+      }
+      
+      throw Exception('$errorMessage\n\n상세: ${e.toString()}');
     }
-    return urls;
   }
 
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) return;
-    
-    // 사진 필수 체크 로직 제거
-    // if (_selectedImages.isEmpty) {
-    //   ScaffoldMessenger.of(context).showSnackBar(
-    //     SnackBar(content: Text('사진을 반드시 1장 이상 추가해주세요.'), backgroundColor: Colors.redAccent),
-    //   );
-    //   return;
-    // }
 
     setState(() { _isLoading = true; });
 
     try {
+      final title = _titleController.text.trim();
+      final description = _descriptionController.text.trim();
+      
+      // 욕설 필터링 검사 (제목과 설명 모두)
+      await ProfanityFilterService.validateMultipleTexts([title, description]);
+      
       final price = int.parse(_priceController.text);
       final imageUrls = await _uploadImagesAndGetUrls();
+      
       await ProductService.createProduct(
-        title: _titleController.text.trim(),
-        description: _descriptionController.text.trim(),
+        title: title,
+        description: description,
         price: price,
         imageUrls: imageUrls,
         region: _selectedRegion,
       );
+      
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('상품이 등록되었습니다!'), backgroundColor: Colors.green,
+          content: Text('상품이 등록되었습니다!'), 
+          backgroundColor: Colors.green,
         ));
         Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('오류가 발생했습니다: $e')),
+          SnackBar(
+            content: Text(e.toString().replaceAll('Exception: ', '')),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 4),
+          ),
         );
       }
     } finally {
@@ -340,13 +386,28 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                     ),
                   ),
                   child: _isLoading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
-                          ),
+                      ? Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            ),
+                            if (_uploadProgress != null) ...[
+                              const SizedBox(height: 8),
+                              Text(
+                                _uploadProgress!,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ],
                         )
                       : const Text(
                           '상품 등록',

@@ -82,7 +82,9 @@ class NewsDetailScreen extends StatelessWidget {
                   if (news.imageUrls.isNotEmpty)
                     Container(
                       width: double.infinity,
-                      height: 200,
+                      constraints: const BoxConstraints(
+                        maxHeight: 300,
+                      ),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(12),
                         color: Theme.of(context).colorScheme.surfaceVariant,
@@ -91,13 +93,28 @@ class NewsDetailScreen extends StatelessWidget {
                         borderRadius: BorderRadius.circular(12),
                         child: Image.network(
                           news.imageUrls.first,
-                          fit: BoxFit.cover,
+                          fit: BoxFit.contain,
                           errorBuilder: (context, error, stackTrace) {
-                            return Center(
+                            return Container(
+                              height: 200,
+                              alignment: Alignment.center,
                               child: Icon(
                                 Icons.image,
                                 size: 50,
                                 color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+                              ),
+                            );
+                          },
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return Container(
+                              height: 200,
+                              alignment: Alignment.center,
+                              child: CircularProgressIndicator(
+                                value: loadingProgress.expectedTotalBytes != null
+                                    ? loadingProgress.cumulativeBytesLoaded /
+                                        loadingProgress.expectedTotalBytes!
+                                    : null,
                               ),
                             );
                           },

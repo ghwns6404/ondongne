@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../models/news.dart';
 import '../models/admin_news.dart';
 
 class AdminNewsService {
@@ -53,6 +54,13 @@ class AdminNewsService {
   // 삭제 (Admin만 가능)
   static Future<void> deleteAdminNews(String newsId) async {
     await _col.doc(newsId).delete();
+  }
+
+  // ID로 단일 관리자 뉴스 조회
+  static Future<News?> getAdminNews(String newsId) async {
+    final doc = await _col.doc(newsId).get();
+    if (!doc.exists) return null;
+    return News.fromDoc(doc);
   }
 
   // 즐겨찾기 토글

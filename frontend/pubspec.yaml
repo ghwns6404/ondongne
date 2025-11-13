@@ -19,6 +19,9 @@ dependencies:
   geocoding: ^3.0.0
   http: ^1.2.0
   webview_flutter: ^4.13.0
+  flutter_dotenv: ^5.1.0
+  cloud_functions: ^6.0.3
+  intl: ^0.18.0
 
 
 dev_dependencies:
@@ -32,3 +35,4 @@ flutter:
 #assets 경로 등록
   assets:
     - lib/assets/map.html
+    - .env

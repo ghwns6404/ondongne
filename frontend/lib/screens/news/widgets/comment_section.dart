@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../../models/comment.dart';
 import '../../../services/comment_service.dart';
 import '../../../services/user_service.dart';
+import '../../../services/profanity_filter_service.dart';
 
 class CommentSection extends StatefulWidget {
   final String postId;
@@ -36,23 +37,36 @@ class _CommentSectionState extends State<CommentSection> {
     });
 
     try {
+      final content = _commentController.text.trim();
+      
+      // 욕설 필터링 검사
+      await ProfanityFilterService.validateText(content);
+      
+      // 검사 통과 시 댓글 작성
       await CommentService.createComment(
         postId: widget.postId,
         postType: widget.postType,
-        content: _commentController.text.trim(),
+        content: content,
       );
       
       _commentController.clear();
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('댓글이 작성되었습니다')),
+          const SnackBar(
+            content: Text('댓글이 작성되었습니다'),
+            backgroundColor: Colors.green,
+          ),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('댓글 작성 중 오류가 발생했습니다: $e')),
+          SnackBar(
+            content: Text(e.toString().replaceAll('Exception: ', '')),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 4),
+          ),
         );
       }
     } finally {

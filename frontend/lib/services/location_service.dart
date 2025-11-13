@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:http/http.dart' as http;
@@ -66,9 +67,9 @@ class LocationService {
     return getDongFromCoordinates(latitude: pos.latitude, longitude: pos.longitude);
   }
   static Future<String> _reverseGeocodeWithKakao(double lat, double lng) async {
-    final key = const String.fromEnvironment('KAKAO_REST_KEY');
-    if (key.isEmpty) {
-      throw Exception('KAKAO_REST_KEY가 설정되어 있지 않습니다.');
+    final key = dotenv.env['KAKAO_REST_KEY'];
+    if (key == null || key.isEmpty) {
+      throw Exception('KAKAO_REST_KEY가 설정되어 있지 않습니다. .env 파일을 확인해주세요.');
     }
 
     final uri = Uri.parse(

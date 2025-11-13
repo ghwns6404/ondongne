@@ -56,6 +56,13 @@ class NewsService {
     await _col.doc(newsId).delete();
   }
 
+  // ID로 단일 뉴스 조회
+  static Future<News?> getNews(String newsId) async {
+    final doc = await _col.doc(newsId).get();
+    if (!doc.exists) return null;
+    return News.fromDoc(doc);
+  }
+
   // 즐겨찾기 토글
   static Future<void> toggleFavorite(String newsId) async {
     final user = FirebaseAuth.instance.currentUser;

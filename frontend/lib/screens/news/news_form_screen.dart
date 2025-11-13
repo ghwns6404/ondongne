@@ -3,6 +3,7 @@ import '../../models/news.dart';
 import '../../services/news_service.dart';
 import '../../services/user_service.dart';
 import '../../services/admin_news_service.dart';
+import '../../services/profanity_filter_service.dart';
 
 class NewsFormScreen extends StatefulWidget {
   final News? newsToEdit;
@@ -55,6 +56,12 @@ class _NewsFormScreenState extends State<NewsFormScreen> {
     });
 
     try {
+      final title = _titleController.text.trim();
+      final content = _contentController.text.trim();
+      
+      // 욕설 필터링 검사 (제목과 내용 모두)
+      await ProfanityFilterService.validateMultipleTexts([title, content]);
+      
       final bool isAdmin = await UserService.isAdmin();
       final bool isEditMode = widget.newsToEdit != null;
       
@@ -62,15 +69,18 @@ class _NewsFormScreenState extends State<NewsFormScreen> {
         // 수정 모드
         await NewsService.updateNews(
           widget.newsToEdit!.id,
-          title: _titleController.text.trim(),
-          content: _contentController.text.trim(),
+          title: title,
+          content: content,
           region: _selectedRegion,
           imageUrls: [],
         );
         
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('게시물이 수정되었습니다!')),
+            const SnackBar(
+              content: Text('게시물이 수정되었습니다!'),
+              backgroundColor: Colors.green,
+            ),
           );
           Navigator.of(context).pop();
         }
@@ -78,15 +88,15 @@ class _NewsFormScreenState extends State<NewsFormScreen> {
         // 생성 모드
         if (isAdmin) {
           await AdminNewsService.createAdminNews(
-            title: _titleController.text.trim(),
-            content: _contentController.text.trim(),
+            title: title,
+            content: content,
             region: _selectedRegion,
             imageUrls: [],
           );
         } else {
           await NewsService.createNews(
-            title: _titleController.text.trim(),
-            content: _contentController.text.trim(),
+            title: title,
+            content: content,
             region: _selectedRegion,
             imageUrls: [],
           );
@@ -94,7 +104,10 @@ class _NewsFormScreenState extends State<NewsFormScreen> {
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(isAdmin ? '뉴스&이벤트가 등록되었습니다!' : '소식이 등록되었습니다!')),
+            SnackBar(
+              content: Text(isAdmin ? '뉴스&이벤트가 등록되었습니다!' : '소식이 등록되었습니다!'),
+              backgroundColor: Colors.green,
+            ),
           );
           Navigator.of(context).pop();
         }
@@ -102,7 +115,11 @@ class _NewsFormScreenState extends State<NewsFormScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('오류가 발생했습니다: $e')),
+          SnackBar(
+            content: Text(e.toString().replaceAll('Exception: ', '')),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 4),
+          ),
         );
       }
     } finally {

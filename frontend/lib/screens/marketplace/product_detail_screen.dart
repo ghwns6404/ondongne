@@ -6,7 +6,7 @@ import '../../services/chat_service.dart';
 import '../../services/user_service.dart';
 import '../chat/chat_detail_screen.dart';
 
-class ProductDetailScreen extends StatelessWidget {
+class ProductDetailScreen extends StatefulWidget {
   final Product product;
 
   const ProductDetailScreen({
@@ -15,7 +15,83 @@ class ProductDetailScreen extends StatelessWidget {
   });
 
   @override
+  State<ProductDetailScreen> createState() => _ProductDetailScreenState();
+}
+
+class _ProductDetailScreenState extends State<ProductDetailScreen> {
+  int _currentImageIndex = 0;
+
+  Widget _buildImageCarousel(List<String> imageUrls) {
+    return Stack(
+      children: [
+        PageView.builder(
+          itemCount: imageUrls.length,
+          onPageChanged: (index) {
+            setState(() {
+              _currentImageIndex = index;
+            });
+          },
+          itemBuilder: (context, index) {
+            return Image.network(
+              imageUrls[index],
+              fit: BoxFit.contain,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  height: 300,
+                  alignment: Alignment.center,
+                  child: const Icon(Icons.image, size: 64, color: Colors.grey),
+                );
+              },
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) return child;
+                return Container(
+                  height: 300,
+                  alignment: Alignment.center,
+                  child: CircularProgressIndicator(
+                    value: loadingProgress.expectedTotalBytes != null
+                        ? loadingProgress.cumulativeBytesLoaded /
+                            loadingProgress.expectedTotalBytes!
+                        : null,
+                  ),
+                );
+              },
+            );
+          },
+        ),
+        // 이미지 인디케이터
+        Positioned(
+          bottom: 16,
+          left: 0,
+          right: 0,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(
+              imageUrls.length,
+              (index) => Container(
+                margin: const EdgeInsets.symmetric(horizontal: 4),
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: _currentImageIndex == index
+                      ? Colors.white
+                      : Colors.white.withOpacity(0.4),
+                  border: Border.all(
+                    color: Colors.black26,
+                    width: 1,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final product = widget.product;
     final currentUser = FirebaseAuth.instance.currentUser;
     final bool isFavorited =
         currentUser != null && product.favoriteUserIds.contains(currentUser.uid);
@@ -47,18 +123,39 @@ class ProductDetailScreen extends StatelessWidget {
             // 상품 이미지
             if (product.imageUrls.isNotEmpty)
               Container(
-                height: 300,
                 width: double.infinity,
+                constraints: const BoxConstraints(
+                  maxHeight: 400,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.grey[200],
                 ),
-                child: Image.network(
-                  product.imageUrls.first,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return const Icon(Icons.image, size: 64, color: Colors.grey);
-                  },
-                ),
+                child: product.imageUrls.length > 1
+                    ? _buildImageCarousel(product.imageUrls)
+                    : Image.network(
+                        product.imageUrls.first,
+                        fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            height: 300,
+                            alignment: Alignment.center,
+                            child: const Icon(Icons.image, size: 64, color: Colors.grey),
+                          );
+                        },
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return Container(
+                            height: 300,
+                            alignment: Alignment.center,
+                            child: CircularProgressIndicator(
+                              value: loadingProgress.expectedTotalBytes != null
+                                  ? loadingProgress.cumulativeBytesLoaded /
+                                      loadingProgress.expectedTotalBytes!
+                                  : null,
+                            ),
+                          );
+                        },
+                      ),
               )
             else
               Container(
@@ -265,7 +362,7 @@ class ProductDetailScreen extends StatelessWidget {
           TextButton(
             onPressed: () async {
               Navigator.pop(context);
-              await ProductService.deleteProduct(product.id);
+              await ProductService.deleteProduct(widget.product.id);
               if (context.mounted) {
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
