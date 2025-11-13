@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/product.dart';
+import 'notification_service.dart';
+import 'user_service.dart';
 
 class ProductService {
   static final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -28,6 +30,7 @@ class ProductService {
       'price': price,
       'imageUrls': imageUrls,
       'region': region,
+      'status': 'available', // 기본값: 판매중
       'createdAt': FieldValue.serverTimestamp(),
       'updatedAt': null,
       'favoriteUserIds': <String>[],
@@ -60,6 +63,37 @@ class ProductService {
     await _col.doc(productId).delete();
   }
 
+  // 상태 변경
+  static Future<void> updateProductStatus(String productId, String status) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      throw Exception('로그인이 필요합니다.');
+    }
+
+    // 판매자 확인
+    final doc = await _col.doc(productId).get();
+    if (!doc.exists) {
+      throw Exception('상품을 찾을 수 없습니다.');
+    }
+
+    final data = doc.data() as Map<String, dynamic>;
+    final sellerId = data['sellerId'] as String;
+
+    if (sellerId != user.uid) {
+      throw Exception('판매자만 상태를 변경할 수 있습니다.');
+    }
+
+    // 유효한 상태값 확인
+    if (!['available', 'reserved', 'sold'].contains(status)) {
+      throw Exception('유효하지 않은 상태값입니다.');
+    }
+
+    await _col.doc(productId).update({
+      'status': status,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
   // ID로 단일 상품 조회
   static Future<Product?> getProduct(String productId) async {
     final doc = await _col.doc(productId).get();
@@ -72,19 +106,50 @@ class ProductService {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
     final ref = _col.doc(productId);
+    
+    bool isAdding = false;
+    String? sellerId;
+    String? title;
+    
     await _db.runTransaction((txn) async {
       final snap = await txn.get(ref);
       if (!snap.exists) return;
       final data = snap.data() as Map<String, dynamic>;
+      sellerId = data['sellerId'] as String?;
+      title = data['title'] as String?;
+      
       final List<dynamic> favorites = (data['favoriteUserIds'] as List<dynamic>?) ?? [];
       final Set<String> set = favorites.map((e) => e.toString()).toSet();
       if (set.contains(user.uid)) {
         set.remove(user.uid);
+        isAdding = false;
       } else {
         set.add(user.uid);
+        isAdding = true;
       }
       txn.update(ref, {'favoriteUserIds': set.toList()});
     });
+    
+    // 좋아요 추가할 때만 알림 발송 + 매너점수 증가
+    if (isAdding && sellerId != null && title != null) {
+      try {
+        final userDoc = await _db.collection('users').doc(user.uid).get();
+        final userName = userDoc.data()?['name'] ?? '익명';
+        
+        await NotificationService.notifyLike(
+          postOwnerId: sellerId!,
+          likerName: userName,
+          postTitle: title!,
+          postId: productId,
+          postType: 'product',
+        );
+        
+        // 매너점수 증가
+        await UserService.increaseMannerScoreForLike(sellerId!);
+      } catch (e) {
+        print('좋아요 알림 발송 실패: $e');
+      }
+    }
   }
 
   // 쿼리: 지역 필터만 (인덱스 문제 방지)

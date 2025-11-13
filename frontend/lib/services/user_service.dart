@@ -20,6 +20,7 @@ class UserService {
       'email': email,
       'name': name,
       'isAdmin': isAdmin,
+      'mannerScore': 36.5, // 초기 매너점수
       'createdAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
   }
@@ -92,5 +93,36 @@ class UserService {
   // 특정 사용자 Admin 권한 설정
   static Future<void> setAdmin(String uid, bool isAdmin) async {
     await _col.doc(uid).update({'isAdmin': isAdmin});
+  }
+
+  // 매너점수 업데이트 (증가/감소)
+  static Future<void> updateMannerScore({
+    required String uid,
+    required double delta, // 변화량 (양수면 증가, 음수면 감소)
+  }) async {
+    final docRef = _col.doc(uid);
+    
+    await _db.runTransaction((transaction) async {
+      final snapshot = await transaction.get(docRef);
+      
+      if (!snapshot.exists) {
+        throw Exception('사용자를 찾을 수 없습니다.');
+      }
+      
+      final currentScore = (snapshot.data()?['mannerScore'] as num?)?.toDouble() ?? 36.5;
+      final newScore = (currentScore + delta).clamp(0.0, 99.9); // 0~99.9 범위로 제한
+      
+      transaction.update(docRef, {'mannerScore': newScore});
+    });
+  }
+
+  // 좋아요 받았을 때 매너점수 증가
+  static Future<void> increaseMannerScoreForLike(String uid) async {
+    await updateMannerScore(uid: uid, delta: 0.1); // +0.1도
+  }
+
+  // 신고 받았을 때 매너점수 감소
+  static Future<void> decreaseMannerScoreForReport(String uid) async {
+    await updateMannerScore(uid: uid, delta: -1.0); // -1.0도
   }
 }

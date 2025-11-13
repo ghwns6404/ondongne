@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/comment.dart';
+import 'notification_service.dart';
 
 class CommentService {
   static final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -34,6 +35,46 @@ class CommentService {
       'createdAt': FieldValue.serverTimestamp(),
       'updatedAt': null,
     });
+    
+    // 알림 발송: 게시물 작성자 찾기
+    try {
+      String? postOwnerId;
+      String? postTitle;
+      
+      if (postType == 'news') {
+        final postDoc = await _db.collection('news').doc(postId).get();
+        if (postDoc.exists) {
+          postOwnerId = postDoc.data()?['authorId'] as String?;
+          postTitle = postDoc.data()?['title'] as String?;
+        }
+      } else if (postType == 'adminNews') {
+        final postDoc = await _db.collection('adminNews').doc(postId).get();
+        if (postDoc.exists) {
+          postOwnerId = postDoc.data()?['authorId'] as String?;
+          postTitle = postDoc.data()?['title'] as String?;
+        }
+      } else if (postType == 'product') {
+        final postDoc = await _db.collection('products').doc(postId).get();
+        if (postDoc.exists) {
+          postOwnerId = postDoc.data()?['sellerId'] as String?;
+          postTitle = postDoc.data()?['title'] as String?;
+        }
+      }
+      
+      if (postOwnerId != null && postTitle != null) {
+        await NotificationService.notifyComment(
+          postOwnerId: postOwnerId,
+          commenterName: userName,
+          postTitle: postTitle,
+          postId: postId,
+          postType: postType,
+        );
+      }
+    } catch (e) {
+      print('댓글 알림 발송 실패: $e');
+      // 알림 실패해도 댓글 작성은 성공
+    }
+    
     return doc.id;
   }
 

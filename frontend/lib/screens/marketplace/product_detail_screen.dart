@@ -4,6 +4,7 @@ import '../../models/product.dart';
 import '../../services/product_service.dart';
 import '../../services/chat_service.dart';
 import '../../services/user_service.dart';
+import '../../services/report_service.dart';
 import '../chat/chat_detail_screen.dart';
 
 class ProductDetailScreen extends StatefulWidget {
@@ -114,6 +115,26 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               color: isFavorited ? Colors.red : Theme.of(context).colorScheme.primary,
             ),
           ),
+          if (!isOwner)
+            PopupMenuButton<String>(
+              onSelected: (value) {
+                if (value == 'report') {
+                  _showReportDialog();
+                }
+              },
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'report',
+                  child: Row(
+                    children: [
+                      Icon(Icons.report, color: Colors.red),
+                      SizedBox(width: 8),
+                      Text('신고하기'),
+                    ],
+                  ),
+                ),
+              ],
+            ),
         ],
       ),
       body: SingleChildScrollView(
@@ -181,13 +202,33 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Text(
-                    '${product.price.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}원',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
+                  Row(
+                    children: [
+                      Text(
+                        '${product.price.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}원',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: _getStatusColor(product.status),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          _getStatusText(product.status),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 16),
                   
@@ -250,6 +291,72 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       color: Colors.grey[600],
                     ),
                   ),
+                  
+                  // 판매자 전용: 상태 변경
+                  if (isOwner) ...[
+                    const SizedBox(height: 24),
+                    const Divider(),
+                    const SizedBox(height: 16),
+                    const Text(
+                      '거래 상태 변경',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey[300]!),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: product.status,
+                          isExpanded: true,
+                          items: const [
+                            DropdownMenuItem(
+                              value: 'available',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.check_circle, color: Colors.green, size: 20),
+                                  SizedBox(width: 8),
+                                  Text('판매중'),
+                                ],
+                              ),
+                            ),
+                            DropdownMenuItem(
+                              value: 'reserved',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.schedule, color: Colors.orange, size: 20),
+                                  SizedBox(width: 8),
+                                  Text('예약중'),
+                                ],
+                              ),
+                            ),
+                            DropdownMenuItem(
+                              value: 'sold',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.check_circle_outline, color: Colors.grey, size: 20),
+                                  SizedBox(width: 8),
+                                  Text('거래완료'),
+                                ],
+                              ),
+                            ),
+                          ],
+                          onChanged: (String? newStatus) {
+                            if (newStatus != null && newStatus != product.status) {
+                              _changeStatus(newStatus);
+                            }
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -348,6 +455,51 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     return '${date.year}.${date.month.toString().padLeft(2, '0')}.${date.day.toString().padLeft(2, '0')}';
   }
 
+  String _getStatusText(String status) {
+    switch (status) {
+      case 'available':
+        return '판매중';
+      case 'reserved':
+        return '예약중';
+      case 'sold':
+        return '거래완료';
+      default:
+        return '판매중';
+    }
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status) {
+      case 'available':
+        return Colors.green;
+      case 'reserved':
+        return Colors.orange;
+      case 'sold':
+        return Colors.grey;
+      default:
+        return Colors.green;
+    }
+  }
+
+  void _changeStatus(String newStatus) async {
+    try {
+      await ProductService.updateProductStatus(widget.product.id, newStatus);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('거래 상태가 ${_getStatusText(newStatus)}(으)로 변경되었습니다')),
+        );
+        // 화면 새로고침
+        setState(() {});
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('상태 변경 실패: $e')),
+        );
+      }
+    }
+  }
+
   void _showDeleteDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -371,6 +523,119 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               }
             },
             child: const Text('삭제', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showReportDialog() {
+    String? selectedReason;
+    final TextEditingController descController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('상품 신고하기'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('신고 사유를 선택해주세요', style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 12),
+              StatefulBuilder(
+                builder: (context, setState) => Column(
+                  children: [
+                    RadioListTile<String>(
+                      title: const Text('사기/허위매물'),
+                      value: '사기/허위매물',
+                      groupValue: selectedReason,
+                      onChanged: (value) => setState(() => selectedReason = value),
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                    RadioListTile<String>(
+                      title: const Text('욕설/비방'),
+                      value: '욕설/비방',
+                      groupValue: selectedReason,
+                      onChanged: (value) => setState(() => selectedReason = value),
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                    RadioListTile<String>(
+                      title: const Text('음란/선정적'),
+                      value: '음란/선정적',
+                      groupValue: selectedReason,
+                      onChanged: (value) => setState(() => selectedReason = value),
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                    RadioListTile<String>(
+                      title: const Text('기타'),
+                      value: '기타',
+                      groupValue: selectedReason,
+                      onChanged: (value) => setState(() => selectedReason = value),
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: descController,
+                decoration: const InputDecoration(
+                  labelText: '상세 설명 (선택)',
+                  border: OutlineInputBorder(),
+                  hintText: '신고 내용을 자세히 적어주세요',
+                ),
+                maxLines: 3,
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('취소'),
+          ),
+          TextButton(
+            onPressed: () async {
+              if (selectedReason == null) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('신고 사유를 선택해주세요')),
+                );
+                return;
+              }
+
+              Navigator.pop(context);
+
+              try {
+                await ReportService.submitReport(
+                  reportedUserId: widget.product.sellerId,
+                  targetType: 'product',
+                  targetId: widget.product.id,
+                  reason: selectedReason!,
+                  description: descController.text.trim().isEmpty 
+                      ? null 
+                      : descController.text.trim(),
+                );
+
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('신고가 접수되었습니다')),
+                  );
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('신고 실패: $e')),
+                  );
+                }
+              }
+            },
+            child: const Text('신고', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),

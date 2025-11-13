@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/news.dart';
 import '../models/admin_news.dart';
+import 'notification_service.dart';
+import 'user_service.dart';
 
 class AdminNewsService {
   static final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -68,19 +70,50 @@ class AdminNewsService {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
     final ref = _col.doc(newsId);
+    
+    bool isAdding = false;
+    String? authorId;
+    String? title;
+    
     await _db.runTransaction((txn) async {
       final snap = await txn.get(ref);
       if (!snap.exists) return;
       final data = snap.data() as Map<String, dynamic>;
+      authorId = data['authorId'] as String?;
+      title = data['title'] as String?;
+      
       final List<dynamic> favorites = (data['favoriteUserIds'] as List<dynamic>?) ?? [];
       final Set<String> set = favorites.map((e) => e.toString()).toSet();
       if (set.contains(user.uid)) {
         set.remove(user.uid);
+        isAdding = false;
       } else {
         set.add(user.uid);
+        isAdding = true;
       }
       txn.update(ref, {'favoriteUserIds': set.toList()});
     });
+    
+    // 좋아요 추가할 때만 알림 발송 + 매너점수 증가
+    if (isAdding && authorId != null && title != null) {
+      try {
+        final userDoc = await _db.collection('users').doc(user.uid).get();
+        final userName = userDoc.data()?['name'] ?? '익명';
+        
+        await NotificationService.notifyLike(
+          postOwnerId: authorId!,
+          likerName: userName,
+          postTitle: title!,
+          postId: newsId,
+          postType: 'adminNews',
+        );
+        
+        // 매너점수 증가
+        await UserService.increaseMannerScoreForLike(authorId!);
+      } catch (e) {
+        print('좋아요 알림 발송 실패: $e');
+      }
+    }
   }
 
   // 쿼리: 지역 필터만

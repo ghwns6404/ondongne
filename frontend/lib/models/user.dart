@@ -7,6 +7,7 @@ class UserModel {
   final bool isAdmin;
   final String? verifiedDong;
   final Timestamp? verifiedAt;
+  final double mannerScore; // 매너점수 (기본값 36.5도)
 
   UserModel({
     required this.uid,
@@ -15,6 +16,7 @@ class UserModel {
     required this.isAdmin,
     this.verifiedDong,
     this.verifiedAt,
+    this.mannerScore = 36.5,
   });
 
   factory UserModel.fromDoc(DocumentSnapshot doc) {
@@ -26,6 +28,7 @@ class UserModel {
       isAdmin: data['isAdmin'] ?? false,
       verifiedDong: data['verifiedDong'],
       verifiedAt: data['verifiedAt'],
+      mannerScore: (data['mannerScore'] as num?)?.toDouble() ?? 36.5, // 기존 데이터 호환
     );
   }
 }

@@ -87,7 +87,7 @@ class NewsDetailScreen extends StatelessWidget {
                       ),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(12),
-                        color: Theme.of(context).colorScheme.surfaceVariant,
+                        color: Theme.of(context).colorScheme.surfaceContainerHighest,
                       ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(12),

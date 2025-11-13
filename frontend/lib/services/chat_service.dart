@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../models/chat_room.dart';
 import '../models/message.dart';
 import 'user_service.dart';
+import 'notification_service.dart';
 
 class ChatService {
   static final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -76,6 +77,12 @@ class ChatService {
     final messageCol = _roomsCol.doc(chatRoomId).collection('messages');
     final roomRef = _roomsCol.doc(chatRoomId);
 
+    // 채팅방 정보 가져오기 (상대방 ID 확인용)
+    final roomSnapshot = await roomRef.get();
+    final roomData = roomSnapshot.data();
+    final userIds = List<String>.from(roomData?['userIds'] ?? []);
+    final recipientId = userIds.firstWhere((id) => id != currentUser.uid, orElse: () => '');
+
     await _db.runTransaction((transaction) async {
       final newMessage = {
         'senderId': currentUser.uid,
@@ -89,6 +96,28 @@ class ChatService {
         'lastMessageAt': FieldValue.serverTimestamp(),
       });
     });
+
+    // 알림 발송
+    if (recipientId.isNotEmpty) {
+      try {
+        final senderUser = await UserService.getUser(currentUser.uid);
+        final senderName = senderUser?.name ?? '익명';
+        
+        // 메시지 미리보기 (최대 30자)
+        final messagePreview = text.trim().length > 30
+            ? '${text.trim().substring(0, 30)}...'
+            : text.trim();
+
+        await NotificationService.notifyChat(
+          recipientId: recipientId,
+          senderName: senderName,
+          messagePreview: messagePreview,
+          chatRoomId: chatRoomId,
+        );
+      } catch (e) {
+        print('채팅 알림 발송 실패: $e');
+      }
+    }
   }
 
   static Future<void> leaveChatRoom(String chatRoomId) async {

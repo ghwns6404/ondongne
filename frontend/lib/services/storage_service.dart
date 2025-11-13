@@ -29,7 +29,7 @@ class StorageService {
       // 고유한 파일명 생성 (타임스탬프 + 랜덤 문자열)
       final timestamp = DateTime.now().millisecondsSinceEpoch;
       final fileName = file.name.replaceAll(RegExp(r'[^\w\.-]'), '_');
-      final uniqueFileName = '${timestamp}_${fileName}';
+      final uniqueFileName = '${timestamp}_$fileName';
       final path = '$folder/$uniqueFileName';
 
       // Storage 참조 생성

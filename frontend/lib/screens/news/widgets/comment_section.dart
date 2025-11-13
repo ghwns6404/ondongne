@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../models/comment.dart';
 import '../../../services/comment_service.dart';
-import '../../../services/user_service.dart';
 import '../../../services/profanity_filter_service.dart';
 
 class CommentSection extends StatefulWidget {

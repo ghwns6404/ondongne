@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../../services/verification_service.dart';
-import 'package:webview_flutter/webview_flutter.dart';
 
 
 class LocationVerifyScreen extends StatefulWidget {

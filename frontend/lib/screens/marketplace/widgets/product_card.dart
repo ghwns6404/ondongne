@@ -13,6 +13,28 @@ class ProductCard extends StatelessWidget {
     required this.onTap,
   });
 
+  String _getStatusText(String status) {
+    switch (status) {
+      case 'reserved':
+        return '예약중';
+      case 'sold':
+        return '거래완료';
+      default:
+        return '판매중';
+    }
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status) {
+      case 'reserved':
+        return Colors.orange;
+      case 'sold':
+        return Colors.grey;
+      default:
+        return Colors.green;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final currentUser = FirebaseAuth.instance.currentUser;
@@ -43,31 +65,69 @@ class ProductCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // 상품 이미지
-                Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surfaceVariant,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: product.imageUrls.isNotEmpty
-                      ? ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: Image.network(
-                            product.imageUrls.first,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Icon(
-                                Icons.image,
-                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
-                              );
-                            },
+                Stack(
+                  children: [
+                    Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color: product.status == 'sold' 
+                            ? Colors.grey[300] 
+                            : Theme.of(context).colorScheme.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: product.imageUrls.isNotEmpty
+                          ? ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: ColorFiltered(
+                                colorFilter: product.status == 'sold'
+                                    ? const ColorFilter.mode(
+                                        Colors.grey,
+                                        BlendMode.saturation,
+                                      )
+                                    : const ColorFilter.mode(
+                                        Colors.transparent,
+                                        BlendMode.multiply,
+                                      ),
+                                child: Image.network(
+                                  product.imageUrls.first,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Icon(
+                                      Icons.image,
+                                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+                                    );
+                                  },
+                                ),
+                              ),
+                            )
+                          : Icon(
+                              Icons.image,
+                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+                            ),
+                    ),
+                    // 상태 뱃지
+                    if (product.status != 'available')
+                      Positioned(
+                        top: 4,
+                        left: 4,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: _getStatusColor(product.status),
+                            borderRadius: BorderRadius.circular(4),
                           ),
-                        )
-                      : Icon(
-                          Icons.image,
-                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+                          child: Text(
+                            _getStatusText(product.status),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ),
+                      ),
+                  ],
                 ),
                 
                 const SizedBox(width: 12),
@@ -79,9 +139,10 @@ class ProductCard extends StatelessWidget {
                     children: [
                       Text(
                         product.title,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
+                          color: product.status == 'sold' ? Colors.grey : Colors.black,
                         ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -91,7 +152,7 @@ class ProductCard extends StatelessWidget {
                         product.description,
                         style: TextStyle(
                           fontSize: 14,
-                          color: Colors.grey[600],
+                          color: product.status == 'sold' ? Colors.grey[400] : Colors.grey[600],
                         ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -105,7 +166,12 @@ class ProductCard extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              color: Theme.of(context).colorScheme.primary,
+                              color: product.status == 'sold' 
+                                  ? Colors.grey 
+                                  : Theme.of(context).colorScheme.primary,
+                              decoration: product.status == 'sold' 
+                                  ? TextDecoration.lineThrough 
+                                  : null,
                             ),
                           ),
                           IconButton(

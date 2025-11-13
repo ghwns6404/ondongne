@@ -133,7 +133,7 @@ class PopularProductsSection extends StatelessWidget {
               child: Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surfaceVariant,
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
                 ),
                 child: product.imageUrls.isNotEmpty

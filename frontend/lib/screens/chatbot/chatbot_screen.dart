@@ -169,7 +169,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
           ],
         ),
         child: Column(
-        children: [
+          children: [
           // 헤더
           Container(
             padding: const EdgeInsets.all(16),
@@ -274,7 +274,8 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
           ),
         ],
       ),
-    ));
+    ),
+    );
   }
 
   Widget _buildLoadingMessage() {

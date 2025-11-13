@@ -46,7 +46,7 @@ class ChatListScreen extends StatelessWidget {
               final otherUserId = room.userIds.firstWhere((id) => id != currentUser?.uid, orElse: () => '');
               final otherUserName = (room.userNames[otherUserId]?.isNotEmpty ?? false)
                 ? room.userNames[otherUserId]!
-                : (otherUserId.isNotEmpty ? otherUserId.substring(0,6)+'...' : '?');
+                : (otherUserId.isNotEmpty ? '${otherUserId.substring(0,6)}...' : '?');
               
               return ListTile(
                 leading: CircleAvatar(
