@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../models/message.dart';
 import '../../models/appointment.dart';
 import '../../services/chat_service.dart';
 import '../../services/appointment_service.dart';
+import '../../services/storage_service.dart';
 import 'widgets/appointment_bottom_sheet.dart';
 import 'widgets/appointment_card.dart';
 
@@ -29,6 +31,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   final _scrollController = ScrollController();
   final _currentUser = FirebaseAuth.instance.currentUser;
   late final Stream<List<Message>> _messageStream;
+  bool _isUploadingImage = false;
 
   @override
   void initState() {
@@ -47,6 +50,60 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     final messageText = _messageController.text;
     _messageController.clear();
     await ChatService.sendMessage(widget.chatRoomId, messageText);
+  }
+
+  /// 이미지 선택 및 전송
+  Future<void> _pickAndSendImage() async {
+    try {
+      final ImagePicker picker = ImagePicker();
+      final XFile? image = await picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 85,
+      );
+
+      if (image == null) return;
+
+      setState(() {
+        _isUploadingImage = true;
+      });
+
+      // Firebase Storage에 업로드
+      final imageUrl = await StorageService.uploadImage(
+        file: image,
+        folder: 'chat',
+      );
+
+      // 이미지 메시지 전송
+      await ChatService.sendImageMessage(widget.chatRoomId, imageUrl);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('사진을 전송했습니다'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('사진 전송 실패: ${e.toString().replaceAll('Exception: ', '')}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isUploadingImage = false;
+        });
+      }
+    }
   }
 
   Future<void> _leaveChatRoom() async {
@@ -220,6 +277,58 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       );
     }
 
+    // 이미지 메시지인 경우
+    if (message.isImage) {
+      return Align(
+        alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+        child: Container(
+          margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+          constraints: const BoxConstraints(
+            maxWidth: 250,
+            maxHeight: 300,
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Image.network(
+              message.text, // 이미지 URL
+              fit: BoxFit.cover,
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) return child;
+                return Container(
+                  width: 200,
+                  height: 200,
+                  alignment: Alignment.center,
+                  color: Colors.grey[200],
+                  child: CircularProgressIndicator(
+                    value: loadingProgress.expectedTotalBytes != null
+                        ? loadingProgress.cumulativeBytesLoaded /
+                            loadingProgress.expectedTotalBytes!
+                        : null,
+                  ),
+                );
+              },
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  width: 200,
+                  height: 200,
+                  alignment: Alignment.center,
+                  color: Colors.grey[300],
+                  child: const Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.broken_image, size: 48, color: Colors.grey),
+                      SizedBox(height: 8),
+                      Text('이미지 로드 실패', style: TextStyle(color: Colors.grey)),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      );
+    }
+
     // 일반 텍스트 메시지
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
@@ -256,6 +365,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       child: SafeArea(
         child: Row(
           children: [
+            // 약속 잡기 버튼
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 4),
               decoration: BoxDecoration(
@@ -277,6 +387,41 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                 color: Colors.white,
                 tooltip: '약속 잡기',
               ),
+            ),
+            // 이미지 전송 버튼
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 4),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.green[400]!, Colors.green[600]!],
+                ),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.green.withOpacity(0.3),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: _isUploadingImage
+                  ? const Padding(
+                      padding: EdgeInsets.all(12.0),
+                      child: SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      ),
+                    )
+                  : IconButton(
+                      icon: const Icon(Icons.image, size: 22),
+                      onPressed: _pickAndSendImage,
+                      color: Colors.white,
+                      tooltip: '사진 보내기',
+                    ),
             ),
             Expanded(
               child: TextField(

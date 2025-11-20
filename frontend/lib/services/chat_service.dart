@@ -140,6 +140,18 @@ class ChatService {
     );
   }
 
+  /// 이미지 메시지 전송
+  static Future<void> sendImageMessage(
+    String chatRoomId,
+    String imageUrl,
+  ) async {
+    await sendMessage(
+      chatRoomId,
+      imageUrl, // 이미지 URL을 text에 저장
+      type: 'image',
+    );
+  }
+
   static Future<void> leaveChatRoom(String chatRoomId) async {
     final currentUser = _auth.currentUser;
     if (currentUser == null) return;
