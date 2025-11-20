@@ -91,6 +91,7 @@ class ChatListScreen extends StatelessWidget {
                       builder: (context) => ChatDetailScreen(
                         chatRoomId: room.id,
                         otherUserName: otherUserName,
+                        otherUserId: otherUserId,
                       ),
                     ),
                   );

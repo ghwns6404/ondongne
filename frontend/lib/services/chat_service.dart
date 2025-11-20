@@ -70,7 +70,12 @@ class ChatService {
             snapshot.docs.map((doc) => Message.fromDoc(doc)).toList());
   }
 
-  static Future<void> sendMessage(String chatRoomId, String text) async {
+  static Future<void> sendMessage(
+    String chatRoomId,
+    String text, {
+    String type = 'text',
+    String? appointmentId,
+  }) async {
     final currentUser = _auth.currentUser;
     if (currentUser == null || text.trim().isEmpty) return;
 
@@ -87,6 +92,8 @@ class ChatService {
       final newMessage = {
         'senderId': currentUser.uid,
         'text': text.trim(),
+        'type': type,
+        if (appointmentId != null) 'appointmentId': appointmentId,
         'createdAt': FieldValue.serverTimestamp(),
       };
       transaction.set(messageCol.doc(), newMessage);
@@ -118,6 +125,19 @@ class ChatService {
         print('채팅 알림 발송 실패: $e');
       }
     }
+  }
+
+  /// 약속 메시지 전송
+  static Future<void> sendAppointmentMessage(
+    String chatRoomId,
+    String appointmentId,
+  ) async {
+    await sendMessage(
+      chatRoomId,
+      '📅 약속 제안',
+      type: 'appointment',
+      appointmentId: appointmentId,
+    );
   }
 
   static Future<void> leaveChatRoom(String chatRoomId) async {

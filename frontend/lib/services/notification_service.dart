@@ -98,6 +98,49 @@ class NotificationService {
     );
   }
 
+  /// 약속 알림 생성
+  static Future<void> notifyAppointment({
+    required String receiverId,
+    required String type, // 'proposal', 'accepted', 'rejected', 'cancelled'
+    required String appointmentId,
+  }) async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser?.uid == receiverId) return;
+
+    String title = '';
+    String body = '';
+
+    switch (type) {
+      case 'proposal':
+        title = '📅 약속 제안';
+        body = '새로운 약속 제안이 도착했습니다.';
+        break;
+      case 'accepted':
+        title = '✅ 약속 수락';
+        body = '약속이 확정되었습니다!';
+        break;
+      case 'rejected':
+        title = '❌ 약속 거절';
+        body = '약속이 거절되었습니다.';
+        break;
+      case 'cancelled':
+        title = '🚫 약속 취소';
+        body = '약속이 취소되었습니다.';
+        break;
+    }
+
+    await createNotification(
+      userId: receiverId,
+      type: NotificationType.chat, // 임시로 chat 타입 사용 (나중에 appointment 타입 추가 가능)
+      title: title,
+      body: body,
+      data: {
+        'appointmentId': appointmentId,
+        'appointmentType': type,
+      },
+    );
+  }
+
   /// 내 알림 목록 가져오기 (Stream)
   static Stream<List<AppNotification>> watchMyNotifications() {
     final user = FirebaseAuth.instance.currentUser;

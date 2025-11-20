@@ -452,6 +452,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                           builder: (context) => ChatDetailScreen(
                             chatRoomId: chatRoomId,
                             otherUserName: sellerName,
+                            otherUserId: product.sellerId,
                           ),
                         ),
                       );

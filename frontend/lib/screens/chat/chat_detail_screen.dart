@@ -1,16 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../models/message.dart';
+import '../../models/appointment.dart';
 import '../../services/chat_service.dart';
+import '../../services/appointment_service.dart';
+import 'widgets/appointment_bottom_sheet.dart';
+import 'widgets/appointment_card.dart';
 
 class ChatDetailScreen extends StatefulWidget {
   final String chatRoomId;
   final String otherUserName;
+  final String otherUserId; // 추가
 
   const ChatDetailScreen({
     super.key,
     required this.chatRoomId,
     required this.otherUserName,
+    required this.otherUserId, // 추가
   });
 
   @override
@@ -49,6 +56,57 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     }
   }
 
+  /// 약속 잡기 바텀시트 열기
+  Future<void> _openAppointmentSheet() async {
+    final result = await showModalBottomSheet<Map<String, dynamic>>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => AppointmentBottomSheet(
+        chatRoomId: widget.chatRoomId,
+        receiverId: widget.otherUserId,
+      ),
+    );
+
+    if (result != null && mounted) {
+      try {
+        // 약속 생성
+        final appointmentId = await AppointmentService.createAppointment(
+          chatRoomId: widget.chatRoomId,
+          receiverId: widget.otherUserId,
+          dateTime: result['dateTime'] as DateTime,
+          location: result['location'] as String,
+          coordinates: result['coordinates'] as GeoPoint?,
+          memo: result['memo'] as String?,
+        );
+
+        // 채팅에 약속 메시지 전송
+        await ChatService.sendAppointmentMessage(
+          widget.chatRoomId,
+          appointmentId,
+        );
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('약속 제안을 보냈습니다!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('약속 생성 실패: ${e.toString()}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -56,10 +114,30 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
         // 상단에는 otherUserName (닉네임) 이 표시됨
         title: Text(widget.otherUserName),
         actions: [
-          IconButton(
-            icon: Icon(Icons.exit_to_app),
-            tooltip: '채팅방 나가기',
-            onPressed: () async {
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 4),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: IconButton(
+              icon: const Icon(Icons.calendar_month, size: 26),
+              tooltip: '약속 잡기',
+              onPressed: _openAppointmentSheet,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+          ),
+          Container(
+            margin: const EdgeInsets.only(left: 4, right: 8),
+            decoration: BoxDecoration(
+              color: Colors.red.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: IconButton(
+              icon: const Icon(Icons.exit_to_app, size: 26),
+              tooltip: '채팅방 나가기',
+              color: Colors.red,
+              onPressed: () async {
               final confirmed = await showDialog<bool>(
                 context: context,
                 builder: (context) => AlertDialog(
@@ -81,6 +159,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                 await _leaveChatRoom();
               }
             },
+            ),
           ),
         ],
       ),
@@ -124,6 +203,24 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   }
 
   Widget _buildMessageBubble(Message message, bool isMe) {
+    // 약속 메시지인 경우
+    if (message.isAppointment && message.appointmentId != null) {
+      return FutureBuilder<Appointment?>(
+        future: AppointmentService.getAppointment(message.appointmentId!),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          final appointment = snapshot.data!;
+          return AppointmentCard(
+            appointment: appointment,
+            isMe: isMe,
+          );
+        },
+      );
+    }
+
+    // 일반 텍스트 메시지
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
@@ -159,6 +256,28 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       child: SafeArea(
         child: Row(
           children: [
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 4),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.blue[400]!, Colors.blue[600]!],
+                ),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.blue.withOpacity(0.3),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: IconButton(
+                icon: const Icon(Icons.calendar_month, size: 22),
+                onPressed: _openAppointmentSheet,
+                color: Colors.white,
+                tooltip: '약속 잡기',
+              ),
+            ),
             Expanded(
               child: TextField(
                 controller: _messageController,
