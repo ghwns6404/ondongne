@@ -2,7 +2,8 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class ProfanityFilterService {
-  static final FirebaseFunctions _functions = FirebaseFunctions.instance;
+  static final FirebaseFunctions _functions = 
+      FirebaseFunctions.instanceFor(region: 'asia-northeast3');
 
   /// 텍스트에 욕설/비속어가 포함되어 있는지 검사합니다.
   /// 
@@ -34,21 +35,26 @@ class ProfanityFilterService {
 
       return result.data;
     } on FirebaseFunctionsException catch (e) {
-      print('Cloud Functions 오류: ${e.code} - ${e.message}');
+      print('❌ Cloud Functions 오류: ${e.code} - ${e.message}');
+      print('❌ 상세: ${e.details}');
       
       // 오류 처리
       if (e.code == 'unauthenticated') {
         throw Exception('로그인이 필요합니다.');
       } else if (e.code == 'invalid-argument') {
         throw Exception(e.message ?? '잘못된 입력입니다.');
+      } else if (e.code == 'not-found') {
+        print('⚠️ checkProfanity 함수를 찾을 수 없습니다. Firebase Functions 배포 상태를 확인하세요.');
+        throw Exception('욕설 필터링 서비스를 사용할 수 없습니다.\nFirebase Functions가 배포되지 않았습니다.');
       } else {
         // 기타 오류 시 통과 처리 (서비스 중단 방지)
-        print('욕설 필터링 API 오류로 인해 통과 처리합니다.');
+        print('⚠️ 욕설 필터링 API 오류로 인해 통과 처리합니다: ${e.code}');
         return {'isClean': true};
       }
     } catch (e) {
-      print('욕설 필터링 오류: $e');
+      print('❌ 욕설 필터링 오류: $e');
       // 오류 시 통과 처리 (서비스 중단 방지)
+      print('⚠️ 예상치 못한 오류로 통과 처리합니다.');
       return {'isClean': true};
     }
   }

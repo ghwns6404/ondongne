@@ -3,7 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../models/chatbot_message.dart';
 
 class ChatbotService {
-  static final FirebaseFunctions _functions = FirebaseFunctions.instance;
+  static final FirebaseFunctions _functions = 
+      FirebaseFunctions.instanceFor(region: 'asia-northeast3');
 
   /// 챗봇에게 질문하고 검색 결과 받기
   /// 
