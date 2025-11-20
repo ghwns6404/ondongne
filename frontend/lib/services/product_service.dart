@@ -17,6 +17,7 @@ class ProductService {
     required int price,
     required List<String> imageUrls,
     required String region,
+    String category = '기타 중고물품', // 기본값
   }) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
@@ -30,6 +31,7 @@ class ProductService {
       'price': price,
       'imageUrls': imageUrls,
       'region': region,
+      'category': category,
       'status': 'available', // 기본값: 판매중
       'createdAt': FieldValue.serverTimestamp(),
       'updatedAt': null,

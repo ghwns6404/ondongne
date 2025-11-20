@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../services/product_service.dart';
 import '../../services/storage_service.dart';
 import '../../services/profanity_filter_service.dart';
+import '../../services/ai_product_service.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:typed_data';
 
@@ -18,7 +19,9 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
   final _descriptionController = TextEditingController();
   final _priceController = TextEditingController();
   String _selectedRegion = '대전 동구';
+  String _selectedCategory = '기타 중고물품';
   bool _isLoading = false;
+  bool _isAnalyzing = false;
   String? _uploadProgress;
   List<XFile> _selectedImages = [];
 
@@ -28,6 +31,22 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
     '대전 서구',
     '대전 대덕구',
     '대전 유성구',
+  ];
+
+  final List<String> _categories = [
+    '디지털/가전',
+    '가구/인테리어',
+    '유아동/유아용품',
+    '생활/가공식품',
+    '스포츠/레저',
+    '여성잡화',
+    '남성패션/잡화',
+    '게임/취미',
+    '뷰티/미용',
+    '반려동물용품',
+    '도서/티켓/음반',
+    '식물',
+    '기타 중고물품',
   ];
 
   @override
@@ -49,6 +68,72 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
       setState(() { _selectedImages = images.take(3).toList(); });
     } else {
       setState(() { _selectedImages = images; });
+    }
+  }
+
+  // AI 자동 작성
+  Future<void> _analyzeWithAI() async {
+    if (_selectedImages.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('먼저 상품 사진을 선택해주세요!'),
+        backgroundColor: Colors.orange,
+      ));
+      return;
+    }
+
+    setState(() { _isAnalyzing = true; });
+
+    try {
+      // 첫 번째 이미지로 분석
+      final analysis = await AIProductService.analyzeProductImage(_selectedImages[0]);
+
+      // 결과가 비어있으면
+      if (analysis.title.isEmpty || analysis.description.isEmpty) {
+        throw Exception('사진에서 상품을 명확히 식별할 수 없습니다.\n더 선명한 사진으로 다시 시도해주세요.');
+      }
+
+      // 자동 입력
+      setState(() {
+        _titleController.text = analysis.title;
+        _descriptionController.text = analysis.description;
+        _selectedCategory = analysis.category;
+        if (analysis.suggestedPrice > 0) {
+          _priceController.text = analysis.suggestedPrice.toString();
+        }
+      });
+
+      // 성공 메시지
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('✨ AI 자동 작성 완료!', style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 4),
+              Text('추천 가격: ${analysis.priceRangeText}'),
+              if (analysis.priceMin > 0) ...[
+                const SizedBox(height: 2),
+                Text('💡 ${analysis.priceReason}', style: const TextStyle(fontSize: 12)),
+              ],
+            ],
+          ),
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 5),
+        ));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('AI 분석 실패: ${e.toString().replaceAll('Exception: ', '')}'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 4),
+        ));
+      }
+    } finally {
+      if (mounted) {
+        setState(() { _isAnalyzing = false; });
+      }
     }
   }
 
@@ -125,6 +210,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
         price: price,
         imageUrls: imageUrls,
         region: _selectedRegion,
+        category: _selectedCategory,
       );
       
       if (mounted) {
@@ -268,9 +354,9 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
               ),
               const SizedBox(height: 24),
 
-              // 상품 사진 (최대 3장)
+              // 카테고리
               Text(
-                '상품 사진 (최대 3장)',
+                '카테고리',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -278,12 +364,109 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                 ),
               ),
               const SizedBox(height: 8),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey[300]!),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: _selectedCategory,
+                    isExpanded: true,
+                    icon: const Icon(Icons.keyboard_arrow_down),
+                    style: const TextStyle(color: Colors.black, fontSize: 16),
+                    items: _categories.map((String category) {
+                      return DropdownMenuItem<String>(
+                        value: category,
+                        child: Text(category),
+                      );
+                    }).toList(),
+                    onChanged: (String? newValue) {
+                      if (newValue != null) {
+                        setState(() {
+                          _selectedCategory = newValue;
+                        });
+                      }
+                    },
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // 상품 사진 (최대 3장)
+              Row(
+                children: [
+                  Text(
+                    '상품 사진 (최대 3장)',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                  const Spacer(),
+                  // AI 자동 작성 버튼
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF6366F1).withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: (_isLoading || _isAnalyzing) ? null : _analyzeWithAI,
+                        borderRadius: BorderRadius.circular(20),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (_isAnalyzing)
+                                const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              else
+                                const Icon(Icons.auto_awesome, color: Colors.white, size: 18),
+                              const SizedBox(width: 6),
+                              Text(
+                                _isAnalyzing ? 'AI 분석중...' : 'AI 자동 작성',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
               Row(
                 children: [
                   ElevatedButton.icon(
-                    onPressed: _isLoading ? null : _pickImages,
-                    icon: Icon(Icons.add_photo_alternate),
-                    label: Text('사진 선택'),
+                    onPressed: (_isLoading || _isAnalyzing) ? null : _pickImages,
+                    icon: const Icon(Icons.add_photo_alternate),
+                    label: const Text('사진 선택'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Theme.of(context).colorScheme.primary,
                     ),

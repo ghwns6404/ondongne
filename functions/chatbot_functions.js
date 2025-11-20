@@ -11,7 +11,7 @@ const openai = new OpenAI({
  * 챗봇 검색 기능
  * 사용자 질문을 GPT로 분석하여 키워드 추출 후 Firestore 검색
  */
-exports.chatbotSearch = functions.https.onCall(async (data, context) => {
+exports.chatbotSearch = functions.region('asia-northeast3').https.onCall(async (data, context) => {
   // 인증 확인
   if (!context.auth) {
     throw new functions.https.HttpsError(

@@ -8,6 +8,7 @@ class Product {
   final int price;
   final List<String> imageUrls;
   final String region; // 예: 대전 동구, 대전 유성구 등
+  final String category; // 카테고리
   final String status; // 'available', 'reserved', 'sold'
   final Timestamp createdAt;
   final Timestamp? updatedAt;
@@ -21,6 +22,7 @@ class Product {
     required this.price,
     required this.imageUrls,
     required this.region,
+    this.category = '기타 중고물품', // 기본값
     this.status = 'available', // 기본값: 판매중
     required this.createdAt,
     this.updatedAt,
@@ -35,6 +37,7 @@ class Product {
       'price': price,
       'imageUrls': imageUrls,
       'region': region,
+      'category': category,
       'status': status,
       'createdAt': createdAt,
       'updatedAt': updatedAt,
@@ -52,6 +55,7 @@ class Product {
       price: (data['price'] as num).toInt(),
       imageUrls: (data['imageUrls'] as List<dynamic>?)?.cast<String>() ?? const [],
       region: data['region'] as String,
+      category: data['category'] as String? ?? '기타 중고물품', // 기존 데이터 호환성
       status: data['status'] as String? ?? 'available', // 기존 데이터 호환성
       createdAt: data['createdAt'] as Timestamp,
       updatedAt: data['updatedAt'] as Timestamp?,
