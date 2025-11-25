@@ -13,6 +13,8 @@ class Product {
   final Timestamp createdAt;
   final Timestamp? updatedAt;
   final List<String> favoriteUserIds; // 즐겨찾기한 사용자 uid 목록
+  final int viewCount; // 조회수
+  final List<String> viewedUserIds; // 조회한 사용자 uid 목록 (중복 방지용)
 
   Product({
     required this.id,
@@ -27,6 +29,8 @@ class Product {
     required this.createdAt,
     this.updatedAt,
     required this.favoriteUserIds,
+    this.viewCount = 0,
+    this.viewedUserIds = const [],
   });
 
   Map<String, dynamic> toMap() {
@@ -42,6 +46,8 @@ class Product {
       'createdAt': createdAt,
       'updatedAt': updatedAt,
       'favoriteUserIds': favoriteUserIds,
+      'viewCount': viewCount,
+      'viewedUserIds': viewedUserIds,
     };
   }
 
@@ -60,6 +66,8 @@ class Product {
       createdAt: data['createdAt'] as Timestamp,
       updatedAt: data['updatedAt'] as Timestamp?,
       favoriteUserIds: (data['favoriteUserIds'] as List<dynamic>?)?.cast<String>() ?? const [],
+      viewCount: (data['viewCount'] as num?)?.toInt() ?? 0,
+      viewedUserIds: (data['viewedUserIds'] as List<dynamic>?)?.cast<String>() ?? const [],
     );
   }
 }

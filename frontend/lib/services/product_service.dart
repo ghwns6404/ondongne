@@ -36,6 +36,8 @@ class ProductService {
       'createdAt': FieldValue.serverTimestamp(),
       'updatedAt': null,
       'favoriteUserIds': <String>[],
+      'viewCount': 0,
+      'viewedUserIds': <String>[],
     });
     return doc.id;
   }
@@ -101,6 +103,33 @@ class ProductService {
     final doc = await _col.doc(productId).get();
     if (!doc.exists) return null;
     return Product.fromDoc(doc);
+  }
+
+  // 조회수 증가 (상품 상세 화면 진입 시 호출)
+  static Future<void> incrementViewCount(String productId) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    final ref = _col.doc(productId);
+    
+    await _db.runTransaction((txn) async {
+      final snap = await txn.get(ref);
+      if (!snap.exists) return;
+      
+      final data = snap.data() as Map<String, dynamic>;
+      final currentCount = (data['viewCount'] as num?)?.toInt() ?? 0;
+      final List<dynamic> viewedUsers = (data['viewedUserIds'] as List<dynamic>?) ?? [];
+      final Set<String> viewedSet = viewedUsers.map((e) => e.toString()).toSet();
+      
+      // 이미 조회한 사용자가 아니면 조회수 증가
+      if (!viewedSet.contains(user.uid)) {
+        viewedSet.add(user.uid);
+        txn.update(ref, {
+          'viewCount': currentCount + 1,
+          'viewedUserIds': viewedSet.toList(),
+        });
+      }
+    });
   }
 
   // 즐겨찾기 토글

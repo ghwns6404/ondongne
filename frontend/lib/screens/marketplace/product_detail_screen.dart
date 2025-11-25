@@ -22,6 +22,22 @@ class ProductDetailScreen extends StatefulWidget {
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
   int _currentImageIndex = 0;
 
+  @override
+  void initState() {
+    super.initState();
+    // 조회수 증가
+    _incrementViewCount();
+  }
+
+  Future<void> _incrementViewCount() async {
+    try {
+      await ProductService.incrementViewCount(widget.product.id);
+    } catch (e) {
+      // 조회수 증가 실패는 무시 (사용자 경험에 영향 없음)
+      print('조회수 증가 실패: $e');
+    }
+  }
+
   Widget _buildImageCarousel(List<String> imageUrls) {
     return Stack(
       children: [

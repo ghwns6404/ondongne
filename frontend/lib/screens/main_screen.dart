@@ -10,6 +10,7 @@ import 'widgets/top_app_bar.dart';
 import 'widgets/admin_news_section.dart';
 import 'widgets/news_section.dart';
 import 'widgets/popular_products_section.dart';
+import 'widgets/recommended_products_section.dart';
 import 'widgets/trending_news_section.dart';
 import 'widgets/ad_banner.dart';
 import 'widgets/bottom_navigation.dart';
@@ -198,6 +199,17 @@ class _MainScreenState extends State<MainScreen> {
           
           // 좋아요 많은 소식
           const TrendingNewsSection(),
+
+          const SizedBox(height: 24),
+
+          // 당신을 위한 추천
+          RecommendedProductsSection(
+            onMorePressed: () {
+              setState(() {
+                _currentIndex = 2; // 중고거래 탭
+              });
+            },
+          ),
 
           const SizedBox(height: 24),
 

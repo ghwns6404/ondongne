@@ -282,3 +282,188 @@ JSON 형식:
   }
 });
 
+/**
+ * GPT 기반 스마트 추천 엔진
+ * 사용자의 행동 패턴을 분석하고 추천 이유를 생성합니다.
+ */
+exports.getSmartRecommendations = functions.region('asia-northeast3').https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError('unauthenticated', '로그인이 필요합니다.');
+  }
+
+  const userId = context.auth.uid;
+  const limit = data.limit || 5;
+
+  try {
+    console.log(`스마트 추천 시작 - 사용자: ${userId}`);
+
+    // 1. 사용자가 좋아요/조회한 상품 가져오기
+    const favoriteProducts = await admin.firestore()
+      .collection('products')
+      .where('favoriteUserIds', 'array-contains', userId)
+      .limit(20)
+      .get();
+
+    const viewedProducts = await admin.firestore()
+      .collection('products')
+      .where('viewedUserIds', 'array-contains', userId)
+      .limit(20)
+      .get();
+
+    if (favoriteProducts.empty && viewedProducts.empty) {
+      console.log('사용자 활동 데이터 없음');
+      return {
+        success: true,
+        recommendations: [],
+        message: '더 많은 상품을 둘러보고 좋아요를 눌러보세요!',
+      };
+    }
+
+    // 2. 사용자 선호도 프로필 생성
+    const userPreference = {
+      categories: {},
+      priceRanges: [],
+      keywords: [],
+    };
+
+    [...favoriteProducts.docs, ...viewedProducts.docs].forEach(doc => {
+      const data = doc.data();
+      const category = data.category || '기타 중고물품';
+      const price = data.price || 0;
+
+      // 카테고리 빈도 카운트
+      userPreference.categories[category] = (userPreference.categories[category] || 0) + 1;
+      
+      // 가격대 수집
+      userPreference.priceRanges.push(price);
+      
+      // 키워드 추출 (제목에서)
+      const title = data.title || '';
+      const words = title.split(/\s+/).filter(w => w.length > 1);
+      userPreference.keywords.push(...words);
+    });
+
+    // 3. GPT에게  분석 및 추천 상품 찾기
+    const topCategories = Object.entries(userPreference.categories)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([cat]) => cat);
+
+    const avgPrice = userPreference.priceRanges.length > 0
+      ? Math.floor(userPreference.priceRanges.reduce((a, b) => a + b, 0) / userPreference.priceRanges.length)
+      : 0;
+
+    console.log(`사용자 선호: 카테고리=${topCategories.join(',')}, 평균가격=${avgPrice}`);
+
+    // 4. 추천 후보 상품 가져오기
+    const candidateProducts = [];
+    for (const category of topCategories) {
+      const snapshot = await admin.firestore()
+        .collection('products')
+        .where('status', '==', 'available')
+        .where('category', '==', category)
+        .orderBy('viewCount', 'desc')
+        .limit(10)
+        .get();
+
+      snapshot.docs.forEach(doc => {
+        const data = doc.data();
+        // 이미 본 상품 제외
+        if (!data.viewedUserIds?.includes(userId) && 
+            !data.favoriteUserIds?.includes(userId) &&
+            data.sellerId !== userId) {
+          candidateProducts.push({
+            id: doc.id,
+            ...data
+          });
+        }
+      });
+    }
+
+    if (candidateProducts.length === 0) {
+      console.log('추천 후보 상품 없음');
+      return {
+        success: true,
+        recommendations: [],
+        message: '새로운 상품이 등록되면 추천해드릴게요!',
+      };
+    }
+
+    // 5. GPT에게 추천 이유 생성 요청
+    const productsForGPT = candidateProducts.slice(0, limit).map(p => ({
+      id: p.id,
+      title: p.title,
+      category: p.category,
+      price: p.price,
+    }));
+
+    const gptResponse = await openai.chat.completions.create({
+      model: 'gpt-4',
+      messages: [
+        {
+          role: 'system',
+          content: `당신은 중고거래 플랫폼의 추천 시스템입니다.
+사용자의 선호도를 분석하여 왜 이 상품을 추천하는지 간단하고 매력적으로 설명하세요.
+
+응답은 반드시 JSON 배열 형식으로만 하세요:
+[
+  {
+    "productId": "상품ID",
+    "reason": "추천 이유 (한 줄, 15자 이내)"
+  }
+]`,
+        },
+        {
+          role: 'user',
+          content: `사용자가 좋아하는 카테고리: ${topCategories.join(', ')}
+평균 가격대: ${avgPrice.toLocaleString()}원
+
+추천 상품 목록:
+${productsForGPT.map((p, i) => `${i + 1}. [${p.id}] ${p.title} - ${p.category}, ${p.price.toLocaleString()}원`).join('\n')}
+
+각 상품을 추천하는 이유를 간단히 작성해주세요.`,
+        },
+      ],
+      temperature: 0.7,
+      max_tokens: 500,
+    });
+
+    let gptResult = gptResponse.choices[0].message.content;
+    console.log('GPT 원본 응답:', gptResult);
+
+    // 마크다운 코드 블록 제거
+    gptResult = gptResult.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+
+    const reasons = JSON.parse(gptResult);
+
+    // 6. 최종 추천 결과 생성
+    const recommendations = productsForGPT.map(product => {
+      const reasonObj = reasons.find(r => r.productId === product.id);
+      return {
+        productId: product.id,
+        title: product.title,
+        category: product.category,
+        price: product.price,
+        reason: reasonObj?.reason || '당신이 좋아할 만한 상품',
+      };
+    });
+
+    console.log(`추천 완료: ${recommendations.length}개 상품`);
+
+    return {
+      success: true,
+      recommendations,
+      userPreference: {
+        topCategories,
+        avgPrice,
+      },
+    };
+  } catch (error) {
+    console.error('스마트 추천 오류:', error);
+    throw new functions.https.HttpsError(
+      'internal',
+      `추천 생성 중 오류가 발생했습니다: ${error.message}`
+    );
+  }
+});
+
