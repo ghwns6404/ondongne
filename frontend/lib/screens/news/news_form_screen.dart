@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../models/news.dart';
 import '../../services/news_service.dart';
 import '../../services/user_service.dart';
 import '../../services/admin_news_service.dart';
 import '../../services/profanity_filter_service.dart';
+import '../../services/storage_service.dart';
 
 class NewsFormScreen extends StatefulWidget {
   final News? newsToEdit;
@@ -20,6 +22,8 @@ class _NewsFormScreenState extends State<NewsFormScreen> {
   final _contentController = TextEditingController();
   String _selectedRegion = '대전 전체';
   bool _isLoading = false;
+  final List<XFile> _selectedImages = []; // 선택한 이미지 목록
+  final ImagePicker _picker = ImagePicker();
 
   final List<String> _regions = [
     '대전 전체',
@@ -48,6 +52,38 @@ class _NewsFormScreenState extends State<NewsFormScreen> {
     super.dispose();
   }
 
+  // 이미지 선택
+  Future<void> _pickImages() async {
+    try {
+      final List<XFile> images = await _picker.pickMultiImage();
+      if (images.isNotEmpty) {
+        setState(() {
+          _selectedImages.addAll(images);
+          // 최대 5개로 제한
+          if (_selectedImages.length > 5) {
+            _selectedImages.removeRange(5, _selectedImages.length);
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('이미지 선택 실패: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  // 이미지 제거
+  void _removeImage(int index) {
+    setState(() {
+      _selectedImages.removeAt(index);
+    });
+  }
+
   Future<void> _submitNews() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -62,6 +98,19 @@ class _NewsFormScreenState extends State<NewsFormScreen> {
       // 욕설 필터링 검사 (제목과 내용 모두)
       await ProfanityFilterService.validateMultipleTexts([title, content]);
       
+      // 이미지 업로드
+      List<String> uploadedImageUrls = [];
+      if (_selectedImages.isNotEmpty) {
+        try {
+          uploadedImageUrls = await StorageService.uploadMultipleImages(
+            files: _selectedImages,
+            folder: 'news',
+          );
+        } catch (e) {
+          throw Exception('이미지 업로드 실패: $e');
+        }
+      }
+      
       final bool isAdmin = await UserService.isAdmin();
       final bool isEditMode = widget.newsToEdit != null;
       
@@ -72,7 +121,7 @@ class _NewsFormScreenState extends State<NewsFormScreen> {
           title: title,
           content: content,
           region: _selectedRegion,
-          imageUrls: [],
+          imageUrls: uploadedImageUrls,
         );
         
         if (mounted) {
@@ -91,14 +140,14 @@ class _NewsFormScreenState extends State<NewsFormScreen> {
             title: title,
             content: content,
             region: _selectedRegion,
-            imageUrls: [],
+            imageUrls: uploadedImageUrls,
           );
         } else {
           await NewsService.createNews(
             title: title,
             content: content,
             region: _selectedRegion,
-            imageUrls: [],
+            imageUrls: uploadedImageUrls,
           );
         }
 
@@ -197,6 +246,87 @@ class _NewsFormScreenState extends State<NewsFormScreen> {
                   });
                 },
               ),
+              
+              const SizedBox(height: 16),
+              
+              // 이미지 추가 (선택 사항)
+              const Text(
+                '이미지 (선택 사항, 최대 5장)',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              
+              // 이미지 선택 버튼
+              OutlinedButton.icon(
+                onPressed: _selectedImages.length >= 5 ? null : _pickImages,
+                icon: const Icon(Icons.add_photo_alternate),
+                label: Text(_selectedImages.isEmpty ? '이미지 추가' : '이미지 더 추가 (${_selectedImages.length}/5)'),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                ),
+              ),
+              
+              // 선택한 이미지 미리보기
+              if (_selectedImages.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                SizedBox(
+                  height: 100,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: _selectedImages.length,
+                    itemBuilder: (context, index) {
+                      return Stack(
+                        children: [
+                          Container(
+                            width: 100,
+                            height: 100,
+                            margin: const EdgeInsets.only(right: 8),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: Colors.grey[300]!),
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: Image.network(
+                                _selectedImages[index].path,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Container(
+                                    color: Colors.grey[200],
+                                    child: const Icon(Icons.image, size: 40),
+                                  );
+                                },
+                              ),
+                            ),
+                          ),
+                          Positioned(
+                            top: 4,
+                            right: 12,
+                            child: GestureDetector(
+                              onTap: () => _removeImage(index),
+                              child: Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: const BoxDecoration(
+                                  color: Colors.red,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.close,
+                                  color: Colors.white,
+                                  size: 16,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+              ],
               
               const SizedBox(height: 16),
               

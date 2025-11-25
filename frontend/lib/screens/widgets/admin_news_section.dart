@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import '../../models/news.dart';
-import '../../services/news_service.dart';
-import '../news/news_detail_screen.dart';
+import '../../models/admin_news.dart';
+import '../../services/admin_news_service.dart';
+import '../news/admin_news_detail_screen.dart';
 
-class NewsSection extends StatelessWidget {
+class AdminNewsSection extends StatelessWidget {
   final String? searchQuery; // 옵션: 검색어
   final VoidCallback? onMorePressed; // 더보기 액션
-  const NewsSection({super.key, this.searchQuery, this.onMorePressed});
+  const AdminNewsSection({super.key, this.searchQuery, this.onMorePressed});
 
   @override
   Widget build(BuildContext context) {
@@ -20,32 +20,39 @@ class NewsSection extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                '우리동네 소식',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: tossPrimary,
-                ),
+              Row(
+                children: [
+                  Icon(Icons.campaign, color: tossPrimary, size: 24),
+                  const SizedBox(width: 8),
+                  Text(
+                    '우리동네 공지사항',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: tossPrimary,
+                    ),
+                  ),
+                ],
               ),
-              TextButton(
-                onPressed: onMorePressed,
-                child: Text(
-                  '더보기',
-                  style: TextStyle(
-                    color: tossPrimary,
-                    fontWeight: FontWeight.w500,
+              if (onMorePressed != null)
+                TextButton(
+                  onPressed: onMorePressed,
+                  child: Text(
+                    '더보기',
+                    style: TextStyle(
+                      color: tossPrimary,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ),
-              ),
             ],
           ),
 
           const SizedBox(height: 12),
 
-          // 일반 소식 데이터
-          StreamBuilder<List<News>>(
-            stream: NewsService.watchNews(),
+          // 공지사항 데이터
+          StreamBuilder<List<AdminNews>>(
+            stream: AdminNewsService.watchAdminNews(),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const SizedBox(
@@ -61,24 +68,24 @@ class NewsSection extends StatelessWidget {
                 );
               }
 
-              final newsList = snapshot.data ?? [];
+              final adminNewsList = snapshot.data ?? [];
 
-              // 검색어 필터 (제목/내용에 포함 여부, 대소문자 무시)
+              // 검색어 필터
               final q = (searchQuery ?? '').trim().toLowerCase();
-              final filteredNews = q.isEmpty
-                  ? newsList
-                  : newsList.where((n) {
+              final filteredAdmin = q.isEmpty
+                  ? adminNewsList
+                  : adminNewsList.where((n) {
                       final title = n.title.toLowerCase();
                       final content = n.content.toLowerCase();
                       return title.contains(q) || content.contains(q);
                     }).toList();
 
-              if (filteredNews.isEmpty) {
+              if (filteredAdmin.isEmpty) {
                 return const SizedBox(
                   height: 180,
                   child: Center(
                     child: Text(
-                      '등록된 소식이 없습니다',
+                      '등록된 공지사항이 없습니다',
                       style: TextStyle(color: Colors.grey),
                     ),
                   ),
@@ -89,10 +96,10 @@ class NewsSection extends StatelessWidget {
                 height: 180,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
-                  itemCount: filteredNews.take(5).length,
+                  itemCount: filteredAdmin.take(5).length,
                   itemBuilder: (context, index) {
-                    final news = filteredNews[index];
-                    return _buildNewsCard(context, news);
+                    final adminNews = filteredAdmin[index];
+                    return _buildAdminNewsCard(context, adminNews, tossPrimary);
                   },
                 ),
               );
@@ -103,13 +110,13 @@ class NewsSection extends StatelessWidget {
     );
   }
 
-  // 일반 소식 카드
-  Widget _buildNewsCard(BuildContext context, News news) {
+  // Admin 공지사항 카드
+  Widget _buildAdminNewsCard(BuildContext context, AdminNews adminNews, Color tossPrimary) {
     return InkWell(
       onTap: () {
         Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (context) => NewsDetailScreen(news: news),
+            builder: (context) => AdminNewsDetailScreen(adminNews: adminNews),
           ),
         );
       },
@@ -118,12 +125,14 @@ class NewsSection extends StatelessWidget {
         margin: const EdgeInsets.only(right: 12),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
+          color: tossPrimary.withOpacity(0.1),
+          border: Border.all(color: tossPrimary.withOpacity(0.3), width: 2),
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
-              spreadRadius: 1,
-              blurRadius: 5,
-              offset: const Offset(0, 2),
+              color: tossPrimary.withOpacity(0.2),
+              spreadRadius: 2,
+              blurRadius: 8,
+              offset: const Offset(0, 3),
             ),
           ],
         ),
@@ -135,37 +144,41 @@ class NewsSection extends StatelessWidget {
               child: Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: Colors.grey[200],
+                  color: tossPrimary.withOpacity(0.05),
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
                 ),
-                child: news.imageUrls.isNotEmpty
+                child: adminNews.imageUrls.isNotEmpty
                     ? ClipRRect(
                         borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
                         child: Image.network(
-                          news.imageUrls.first,
+                          adminNews.imageUrls.first,
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) {
-                            return const Icon(Icons.article, size: 40, color: Colors.grey);
+                            return Icon(Icons.campaign, size: 50, color: tossPrimary);
                           },
                         ),
                       )
-                    : const Icon(Icons.article, size: 40, color: Colors.grey),
+                    : Icon(Icons.campaign, size: 50, color: tossPrimary),
               ),
             ),
             Container(
               height: 50,
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.vertical(bottom: Radius.circular(12)),
+                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(12)),
+                border: Border(
+                  top: BorderSide(color: tossPrimary.withOpacity(0.3)),
+                ),
               ),
               child: Center(
                 child: Text(
-                  news.title,
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
+                  adminNews.title,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: tossPrimary,
                   ),
                   textAlign: TextAlign.center,
                   maxLines: 2,
@@ -179,3 +192,4 @@ class NewsSection extends StatelessWidget {
     );
   }
 }
+

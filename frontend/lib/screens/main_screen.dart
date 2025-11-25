@@ -7,6 +7,7 @@ import 'chatbot/chatbot_screen.dart';
 import 'notifications/notifications_screen.dart';
 import 'profile/profile_screen.dart';
 import 'widgets/top_app_bar.dart';
+import 'widgets/admin_news_section.dart';
 import 'widgets/news_section.dart';
 import 'widgets/popular_products_section.dart';
 import 'widgets/trending_news_section.dart';
@@ -169,7 +170,21 @@ class _MainScreenState extends State<MainScreen> {
             ),
           ),
 
-          // 우리동네 소식
+          const SizedBox(height: 16),
+
+          // 우리동네 공지사항 (어드민 글)
+          AdminNewsSection(
+            searchQuery: _searchQuery,
+            onMorePressed: () {
+              setState(() {
+                _currentIndex = 1; // 소식 탭
+              });
+            },
+          ),
+          
+          const SizedBox(height: 24),
+
+          // 우리동네 소식 (일반 사용자 글)
           NewsSection(
             searchQuery: _searchQuery,
             onMorePressed: () {

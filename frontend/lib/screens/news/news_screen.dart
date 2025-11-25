@@ -7,7 +7,7 @@ import '../../services/user_service.dart';
 import 'news_form_screen.dart';
 import 'admin_news_form_screen.dart';
 import 'news_detail_screen.dart';
-// import 'admin_news_detail_screen.dart';
+import 'admin_news_detail_screen.dart';
 
 class NewsScreen extends StatelessWidget {
   const NewsScreen({super.key});
@@ -93,8 +93,8 @@ class NewsScreen extends StatelessWidget {
   Widget _buildAdminNewsSection(BuildContext context) {
     final primary = Theme.of(context).colorScheme.primary;
     return Container(
-      height: 92,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      height: 150,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: primary.withOpacity(0.05),
         border: Border(
@@ -106,12 +106,12 @@ class NewsScreen extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.campaign, color: primary, size: 18),
-              const SizedBox(width: 8),
+              Icon(Icons.campaign, color: primary, size: 22),
+              const SizedBox(width: 10),
               Text(
                 '지역 뉴스&공지사항',
                 style: TextStyle(
-                  fontSize: 15,
+                  fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: primary,
                 ),
@@ -285,87 +285,104 @@ class NewsScreen extends StatelessWidget {
 
   // 뉴스&이벤트 카드
   Widget _buildAdminNewsCard(BuildContext context, AdminNews adminNews, Color primary) {
-    return Container(
-      width: 220,
-      constraints: const BoxConstraints(
-        minHeight: 72,
-        maxHeight: 72,
-      ),
-      margin: const EdgeInsets.only(right: 10),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(10),
-        color: primary.withOpacity(0.1),
-        border: Border.all(color: Theme.of(context).dividerColor),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Flexible(
-              child: Text(
-                adminNews.title,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
+    return InkWell(
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => AdminNewsDetailScreen(adminNews: adminNews),
+          ),
+        );
+      },
+      child: Container(
+        width: 280,
+        constraints: const BoxConstraints(
+          minHeight: 120,
+          maxHeight: 120,
+        ),
+        margin: const EdgeInsets.only(right: 12),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          color: primary.withOpacity(0.1),
+          border: Border.all(color: primary.withOpacity(0.3), width: 1.5),
+          boxShadow: [
+            BoxShadow(
+              color: primary.withOpacity(0.15),
+              spreadRadius: 1,
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Flexible(
+                child: Text(
+                  adminNews.title,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: primary,
+                    height: 1.3,
+                  ),
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(height: 6),
+              // 지역
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
                   color: primary,
-                  height: 1.15,
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            const SizedBox(height: 3),
-            // 지역
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
-              decoration: BoxDecoration(
-                color: primary,
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text(
-                adminNews.region,
-                style: TextStyle(
-                  fontSize: 8, 
-                  color: Colors.white, 
-                  fontWeight: FontWeight.w500,
-                  height: 1.0,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            const SizedBox(height: 3),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.favorite, size: 8, color: Colors.red),
-                const SizedBox(width: 2),
-                Text(
-                  '${adminNews.favoriteUserIds.length}',
+                child: Text(
+                  adminNews.region,
                   style: const TextStyle(
-                    fontSize: 8, 
-                    color: Colors.grey,
+                    fontSize: 10, 
+                    color: Colors.white, 
+                    fontWeight: FontWeight.w600,
                     height: 1.0,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                const Spacer(),
-                Flexible(
-                  child: Text(
-                    _formatDate(adminNews.createdAt),
+              ),
+              const SizedBox(height: 6),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.favorite, size: 12, color: Colors.red),
+                  const SizedBox(width: 4),
+                  Text(
+                    '${adminNews.favoriteUserIds.length}',
                     style: const TextStyle(
-                      fontSize: 7, 
+                      fontSize: 11, 
                       color: Colors.grey,
                       height: 1.0,
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                   ),
-                ),
-              ],
-            ),
-          ],
+                  const Spacer(),
+                  Flexible(
+                    child: Text(
+                      _formatDate(adminNews.createdAt),
+                      style: const TextStyle(
+                        fontSize: 10, 
+                        color: Colors.grey,
+                        height: 1.0,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
