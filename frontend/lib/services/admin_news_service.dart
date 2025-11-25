@@ -17,6 +17,10 @@ class AdminNewsService {
     required String content,
     required String region,
     required List<String> imageUrls,
+    double? latitude,
+    double? longitude,
+    String? address,
+    String? placeName,
   }) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
@@ -31,6 +35,10 @@ class AdminNewsService {
       'createdAt': FieldValue.serverTimestamp(),
       'updatedAt': null,
       'favoriteUserIds': <String>[],
+      'latitude': latitude,
+      'longitude': longitude,
+      'address': address,
+      'placeName': placeName,
     });
     return doc.id;
   }
@@ -42,12 +50,20 @@ class AdminNewsService {
     String? content,
     String? region,
     List<String>? imageUrls,
+    double? latitude,
+    double? longitude,
+    String? address,
+    String? placeName,
   }) async {
     final update = <String, dynamic>{
       if (title != null) 'title': title,
       if (content != null) 'content': content,
       if (region != null) 'region': region,
       if (imageUrls != null) 'imageUrls': imageUrls,
+      'latitude': latitude,
+      'longitude': longitude,
+      'address': address,
+      'placeName': placeName,
       'updatedAt': FieldValue.serverTimestamp(),
     };
     await _col.doc(newsId).update(update);

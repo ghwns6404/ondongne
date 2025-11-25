@@ -6,6 +6,7 @@ import '../../services/user_service.dart';
 import '../../services/admin_news_service.dart';
 import '../../services/profanity_filter_service.dart';
 import '../../services/storage_service.dart';
+import 'widgets/location_picker_screen.dart';
 
 class NewsFormScreen extends StatefulWidget {
   final News? newsToEdit;
@@ -24,6 +25,12 @@ class _NewsFormScreenState extends State<NewsFormScreen> {
   bool _isLoading = false;
   final List<XFile> _selectedImages = []; // 선택한 이미지 목록
   final ImagePicker _picker = ImagePicker();
+  
+  // 위치 정보
+  double? _selectedLatitude;
+  double? _selectedLongitude;
+  String? _selectedAddress;
+  String? _selectedPlaceName;
 
   final List<String> _regions = [
     '대전 전체',
@@ -84,6 +91,48 @@ class _NewsFormScreenState extends State<NewsFormScreen> {
     });
   }
 
+  // 위치 선택
+  Future<void> _pickLocation() async {
+    try {
+      final result = await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => LocationPickerScreen(
+            initialLatitude: _selectedLatitude,
+            initialLongitude: _selectedLongitude,
+          ),
+        ),
+      );
+
+      if (result != null && result is Map<String, dynamic>) {
+        setState(() {
+          _selectedLatitude = result['latitude'] as double?;
+          _selectedLongitude = result['longitude'] as double?;
+          _selectedAddress = result['address'] as String?;
+          _selectedPlaceName = result['placeName'] as String?;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('위치 선택 실패: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  // 위치 삭제
+  void _removeLocation() {
+    setState(() {
+      _selectedLatitude = null;
+      _selectedLongitude = null;
+      _selectedAddress = null;
+      _selectedPlaceName = null;
+    });
+  }
+
   Future<void> _submitNews() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -122,6 +171,10 @@ class _NewsFormScreenState extends State<NewsFormScreen> {
           content: content,
           region: _selectedRegion,
           imageUrls: uploadedImageUrls,
+          latitude: _selectedLatitude,
+          longitude: _selectedLongitude,
+          address: _selectedAddress,
+          placeName: _selectedPlaceName,
         );
         
         if (mounted) {
@@ -141,6 +194,10 @@ class _NewsFormScreenState extends State<NewsFormScreen> {
             content: content,
             region: _selectedRegion,
             imageUrls: uploadedImageUrls,
+            latitude: _selectedLatitude,
+            longitude: _selectedLongitude,
+            address: _selectedAddress,
+            placeName: _selectedPlaceName,
           );
         } else {
           await NewsService.createNews(
@@ -148,6 +205,10 @@ class _NewsFormScreenState extends State<NewsFormScreen> {
             content: content,
             region: _selectedRegion,
             imageUrls: uploadedImageUrls,
+            latitude: _selectedLatitude,
+            longitude: _selectedLongitude,
+            address: _selectedAddress,
+            placeName: _selectedPlaceName,
           );
         }
 
@@ -327,6 +388,77 @@ class _NewsFormScreenState extends State<NewsFormScreen> {
                   ),
                 ),
               ],
+              
+              const SizedBox(height: 16),
+              
+              // 위치 선택 (선택 사항)
+              const Text(
+                '위치 (선택 사항)',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              
+              // 위치 선택 버튼 또는 선택된 위치 표시
+              if (_selectedAddress == null)
+                OutlinedButton.icon(
+                  onPressed: _pickLocation,
+                  icon: const Icon(Icons.location_on),
+                  label: const Text('지도에서 위치 선택'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                  ),
+                )
+              else
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.location_on,
+                        color: Theme.of(context).colorScheme.primary,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (_selectedPlaceName != null)
+                              Text(
+                                _selectedPlaceName!,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            Text(
+                              _selectedAddress!,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close, size: 20),
+                        onPressed: _removeLocation,
+                        tooltip: '위치 삭제',
+                      ),
+                    ],
+                  ),
+                ),
               
               const SizedBox(height: 16),
               

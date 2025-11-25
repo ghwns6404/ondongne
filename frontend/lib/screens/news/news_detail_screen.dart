@@ -5,6 +5,7 @@ import '../../services/news_service.dart';
 import '../../services/user_service.dart';
 import 'news_form_screen.dart';
 import 'widgets/comment_section.dart';
+import 'widgets/location_map_widget.dart';
 
 class NewsDetailScreen extends StatelessWidget {
   final News news;
@@ -77,6 +78,17 @@ class NewsDetailScreen extends StatelessWidget {
                   ),
 
                   const SizedBox(height: 12),
+
+                  // 위치 지도 (위치 정보가 있는 경우)
+                  if (news.latitude != null && news.longitude != null) ...[
+                    LocationMapWidget(
+                      latitude: news.latitude!,
+                      longitude: news.longitude!,
+                      placeName: news.placeName,
+                      address: news.address,
+                    ),
+                    const SizedBox(height: 16),
+                  ],
 
                   // 이미지 (있는 경우)
                   if (news.imageUrls.isNotEmpty)

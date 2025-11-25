@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>위치 지도</title>
+    <style>
+        * { margin: 0; padding: 0; }
+        html, body { width: 100%; height: 100%; overflow: hidden; }
+        #map { width: 100%; height: 100%; }
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <div id="loading">지도 로딩 중...</div>
+
+    <!-- 카카오맵 SDK 로드 -->
+    <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=aab1af1b6dae4b5beb07de4c90e35cee&autoload=false"></script>
+    
+    <script>
+        // URL 파라미터에서 위치 정보 가져오기
+        const urlParams = new URLSearchParams(window.location.search);
+        const lat = parseFloat(urlParams.get('lat'));
+        const lng = parseFloat(urlParams.get('lng'));
+        const placeName = urlParams.get('placeName') || '';
+        const address = urlParams.get('address') || '';
+
+        // 카카오맵 초기화
+        function initMap() {
+            // 로딩 메시지 숨기기
+            const loading = document.getElementById('loading');
+            if (loading) loading.style.display = 'none';
+
+            const container = document.getElementById('map');
+            const options = {
+                center: new kakao.maps.LatLng(lat, lng),
+                level: 3
+            };
+
+            const map = new kakao.maps.Map(container, options);
+
+            // 마커 생성
+            const markerPosition = new kakao.maps.LatLng(lat, lng);
+            const marker = new kakao.maps.Marker({
+                position: markerPosition
+            });
+            marker.setMap(map);
+
+            // 인포윈도우 생성 (이름이나 주소가 있는 경우)
+            if (placeName || address) {
+                let iwContent = '<div style="padding:10px; font-size:12px; max-width:200px;">';
+                if (placeName) {
+                    iwContent += '<div style="font-weight:bold; margin-bottom:4px;">' + placeName + '</div>';
+                }
+                if (address) {
+                    iwContent += '<div style="color:#666;">' + address + '</div>';
+                }
+                iwContent += '</div>';
+
+                const iwPosition = new kakao.maps.LatLng(lat, lng);
+                const infowindow = new kakao.maps.InfoWindow({
+                    position: iwPosition,
+                    content: iwContent
+                });
+                infowindow.open(map, marker);
+            }
+        }
+
+        // 페이지 로드 후 카카오맵 SDK 로드
+        window.addEventListener('load', function() {
+            if (typeof kakao !== 'undefined' && kakao.maps) {
+                kakao.maps.load(function() {
+                    initMap();
+                });
+            } else {
+                let retryCount = 0;
+                const maxRetries = 50;
+                
+                const checkKakao = setInterval(function() {
+                    retryCount++;
+                    console.log('카카오맵 로딩 체크 중... (' + retryCount + '/' + maxRetries + ')');
+                    
+                    if (typeof kakao !== 'undefined' && kakao.maps) {
+                        clearInterval(checkKakao);
+                        kakao.maps.load(function() {
+                            initMap();
+                        });
+                    } else if (retryCount >= maxRetries) {
+                        clearInterval(checkKakao);
+                        document.getElementById('loading').innerHTML = 
+                            '<div style="color: red;">지도 로딩 실패</div>';
+                    }
+                }, 100);
+            }
+        });
+    </script>
+</body>
+</html>
+

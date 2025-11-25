@@ -10,6 +10,12 @@ class News {
   final Timestamp createdAt;
   final Timestamp? updatedAt;
   final List<String> favoriteUserIds; // 즐겨찾기한 사용자 uid 목록
+  
+  // 위치 정보 (선택 사항)
+  final double? latitude;
+  final double? longitude;
+  final String? address;
+  final String? placeName;
 
   News({
     required this.id,
@@ -21,6 +27,10 @@ class News {
     required this.createdAt,
     this.updatedAt,
     required this.favoriteUserIds,
+    this.latitude,
+    this.longitude,
+    this.address,
+    this.placeName,
   });
 
   Map<String, dynamic> toMap() {
@@ -33,6 +43,10 @@ class News {
       'createdAt': createdAt,
       'updatedAt': updatedAt,
       'favoriteUserIds': favoriteUserIds,
+      'latitude': latitude,
+      'longitude': longitude,
+      'address': address,
+      'placeName': placeName,
     };
   }
 
@@ -48,6 +62,10 @@ class News {
       createdAt: data['createdAt'] as Timestamp,
       updatedAt: data['updatedAt'] as Timestamp?,
       favoriteUserIds: (data['favoriteUserIds'] as List<dynamic>?)?.cast<String>() ?? const [],
+      latitude: data['latitude'] as double?,
+      longitude: data['longitude'] as double?,
+      address: data['address'] as String?,
+      placeName: data['placeName'] as String?,
     );
   }
 }

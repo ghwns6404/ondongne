@@ -29,7 +29,7 @@ class _LocationVerifyScreenState extends State<LocationVerifyScreen> {
         _result = dong;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('동 인증 완료: $dong')),
+        SnackBar(content: Text('지역 인증 완료: $dong')),
       );
     } catch (e) {
       if (!mounted) return;

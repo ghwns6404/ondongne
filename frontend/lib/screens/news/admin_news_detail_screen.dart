@@ -5,6 +5,7 @@ import '../../services/admin_news_service.dart';
 import '../../services/user_service.dart';
 import 'admin_news_form_screen.dart';
 import 'widgets/comment_section.dart';
+import 'widgets/location_map_widget.dart';
 
 class AdminNewsDetailScreen extends StatelessWidget {
   final AdminNews adminNews;
@@ -61,6 +62,17 @@ class AdminNewsDetailScreen extends StatelessWidget {
                   ),
                   
                   const SizedBox(height: 16),
+                  
+                  // 위치 지도 (위치 정보가 있는 경우)
+                  if (adminNews.latitude != null && adminNews.longitude != null) ...[
+                    LocationMapWidget(
+                      latitude: adminNews.latitude!,
+                      longitude: adminNews.longitude!,
+                      placeName: adminNews.placeName,
+                      address: adminNews.address,
+                    ),
+                    const SizedBox(height: 16),
+                  ],
                   
                   // 이미지 (있는 경우)
                   if (adminNews.imageUrls.isNotEmpty)
