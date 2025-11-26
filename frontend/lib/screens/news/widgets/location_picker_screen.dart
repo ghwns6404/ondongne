@@ -2,11 +2,9 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'dart:convert';
-// ignore: avoid_web_libraries_in_flutter
-import 'dart:html' as html show window, IFrameElement;
 
-import 'platform_view_registry_stub.dart'
-    if (dart.library.html) 'platform_view_registry_web.dart';
+// 웹 전용 import: 웹이 아닐 때는 컴파일되지 않도록 conditional import 사용
+import 'location_picker_web.dart' if (dart.library.io) 'location_picker_stub.dart';
 
 class LocationPickerScreen extends StatefulWidget {
   final double? initialLatitude;
@@ -38,43 +36,23 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
   void initState() {
     super.initState();
     if (kIsWeb) {
-      _initWebIframe();
+      // 웹 전용 초기화는 별도 구현으로 분리
+      initLocationPickerWeb(
+        webViewId: _webViewId,
+        initialLatitude: widget.initialLatitude,
+        initialLongitude: widget.initialLongitude,
+        onLocationSelected: _handleLocationSelected,
+        onLoaded: () {
+          if (mounted) {
+            setState(() {
+              _isLoading = false;
+            });
+          }
+        },
+      );
     } else {
       _initWebView();
     }
-  }
-  
-  void _initWebIframe() {
-    final lat = widget.initialLatitude ?? 36.3504;
-    final lng = widget.initialLongitude ?? 127.3845;
-    
-    platformViewRegistry.registerViewFactory(
-      _webViewId,
-      (int viewId) {
-        final iframe = html.IFrameElement()
-          ..style.border = 'none'
-          ..style.width = '100%'
-          ..style.height = '100%'
-          ..src = 'location_picker.html?lat=$lat&lng=$lng';
-        
-        return iframe;
-      },
-    );
-    
-    // 메시지 리스너 추가
-    html.window.onMessage.listen((event) {
-      if (event.data is String) {
-        try {
-          _handleLocationSelected(event.data as String);
-        } catch (e) {
-          print('메시지 처리 에러: $e');
-        }
-      }
-    });
-    
-    setState(() {
-      _isLoading = false;
-    });
   }
 
   void _initWebView() {
@@ -282,68 +260,15 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
   @override
   Widget build(BuildContext context) {
     if (kIsWeb) {
-      // 웹에서는 HTML 파일로 카카오맵 표시
-      return Scaffold(
-        appBar: AppBar(
-          title: const Text('위치 선택'),
-          backgroundColor: Theme.of(context).colorScheme.surface,
-          actions: [
-            if (_selectedAddress != null)
-              IconButton(
-                icon: const Icon(Icons.check, color: Colors.green),
-                onPressed: () {
-                  Navigator.of(context).pop({
-                    'latitude': _selectedLat,
-                    'longitude': _selectedLng,
-                    'address': _selectedAddress,
-                    'placeName': _selectedPlaceName,
-                  });
-                },
-                tooltip: '선택 완료',
-              ),
-          ],
-        ),
-        body: Stack(
-          children: [
-            HtmlElementView(viewType: _webViewId),
-            if (_isLoading)
-              const Center(
-                child: CircularProgressIndicator(),
-              ),
-            // 안내 메시지
-            Positioned(
-              top: 16,
-              left: 16,
-              right: 16,
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: const Row(
-                  children: [
-                    Icon(Icons.info_outline, size: 20, color: Colors.blue),
-                    SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        '지도를 클릭하거나 마커를 드래그하세요',
-                        style: TextStyle(fontSize: 12, color: Colors.black87),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
+      // 웹 전용 구현은 별도 파일에 위임
+      return buildLocationPickerWebView(
+        context: context,
+        isLoading: _isLoading,
+        webViewId: _webViewId,
+        selectedAddress: _selectedAddress,
+        selectedLat: _selectedLat,
+        selectedLng: _selectedLng,
+        selectedPlaceName: _selectedPlaceName,
       );
     }
 
