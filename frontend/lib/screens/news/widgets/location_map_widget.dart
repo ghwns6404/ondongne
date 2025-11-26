@@ -1,11 +1,9 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-// ignore: avoid_web_libraries_in_flutter
-import 'dart:html' as html show IFrameElement;
 
-import 'platform_view_registry_stub.dart'
-    if (dart.library.html) 'platform_view_registry_web.dart';
+// 웹 전용 구현/스토브를 분리해 dart:html 이 모바일에서 컴파일되지 않도록 함
+import 'location_map_web.dart' if (dart.library.io) 'location_map_stub.dart';
 
 class LocationMapWidget extends StatefulWidget {
   final double latitude;
@@ -36,33 +34,23 @@ class _LocationMapWidgetState extends State<LocationMapWidget> {
     _webViewId = 'location-map-${widget.latitude}-${widget.longitude}-${DateTime.now().millisecondsSinceEpoch}';
     
     if (kIsWeb) {
-      _initWebIframe();
+      initLocationMapWeb(
+        webViewId: _webViewId,
+        latitude: widget.latitude,
+        longitude: widget.longitude,
+        placeName: widget.placeName,
+        address: widget.address,
+        onLoaded: () {
+          if (mounted) {
+            setState(() {
+              _isLoading = false;
+            });
+          }
+        },
+      );
     } else {
       _initWebView();
     }
-  }
-  
-  void _initWebIframe() {
-    final lat = widget.latitude;
-    final lng = widget.longitude;
-    final placeName = Uri.encodeComponent(widget.placeName ?? '');
-    final address = Uri.encodeComponent(widget.address ?? '');
-    
-    platformViewRegistry.registerViewFactory(
-      _webViewId,
-      (int viewId) {
-        final iframe = html.IFrameElement()
-          ..style.border = 'none'
-          ..style.width = '100%'
-          ..style.height = '100%'
-          ..src = 'location_map.html?lat=$lat&lng=$lng&placeName=$placeName&address=$address';
-        return iframe;
-      },
-    );
-    
-    setState(() {
-      _isLoading = false;
-    });
   }
 
   void _initWebView() {
@@ -154,23 +142,11 @@ class _LocationMapWidgetState extends State<LocationMapWidget> {
   @override
   Widget build(BuildContext context) {
     if (kIsWeb) {
-      // 웹에서는 HTML 파일로 카카오맵 표시
-      return Container(
-        height: 200,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey[300]!),
-        ),
-        clipBehavior: Clip.hardEdge,
-        child: Stack(
-          children: [
-            HtmlElementView(viewType: _webViewId),
-            if (_isLoading)
-              const Center(
-                child: CircularProgressIndicator(),
-              ),
-          ],
-        ),
+      // 웹 전용 UI는 별도 파일로 분리
+      return buildLocationMapWebView(
+        context: context,
+        isLoading: _isLoading,
+        webViewId: _webViewId,
       );
     }
 

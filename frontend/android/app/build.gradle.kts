@@ -16,6 +16,8 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+        // flutter_local_notifications 등에서 요구하는 core library desugaring 활성화
+        isCoreLibraryDesugaringEnabled = true
     }
 
     kotlinOptions {
@@ -44,4 +46,18 @@ android {
 
 flutter {
     source = "../.."
+}
+
+configurations.all {
+    resolutionStrategy {
+        // 높은 AGP를 요구하는 최신 androidx 버전 대신, AGP 8.3.2와 호환 가능한 버전으로 강제
+        force("androidx.browser:browser:1.8.0")
+        force("androidx.core:core-ktx:1.12.0")
+        force("androidx.core:core:1.12.0")
+    }
+}
+
+dependencies {
+    // Java 8+ API를 낮은 API 레벨에서 사용할 수 있도록 desugaring 라이브러리 추가
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
 }
