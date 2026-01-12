@@ -1,21 +1,23 @@
-# 🧩 Flutter 개발 환경 구성 (Windows)
+#  Flutter 개발 환경 구성 (Windows)
 
-이 문서는 Windows 환경에서 Flutter SDK를 설치하고 Android Studio와 연동하여 프로젝트를 생성하는 방법을 안내합니다.  
-모든 과정은 공식 Flutter 문서를 기반으로 작성되었습니다. ([공식 설치 페이지](https://docs.flutter.dev/get-started/install/windows))
+이 실행가이드는 윈도우 환경에서 Flutter SDK를 설치하고 Android Studio와 연동하여 프로젝트를 생성하는 방법을 안내합니다.  
+모든 과정은 공식 Flutter 문서를 기반으로 작성되었습니다.
+
+([공식 설치 페이지](https://docs.flutter.dev/get-started/install/windows))
 
 ---
 
-## ⚙️ 1. Flutter SDK 설치
+##  1. Flutter SDK 설치
 
 잠깐. JDK는 17권장합니다 그 이상은 호환 잘 안됨
 
 1. [Flutter 공식 설치 페이지](https://docs.flutter.dev/get-started/install/windows)에서 최신 버전의 `flutter_windows_[버전]-stable.zip` 파일을 다운로드합니다.  
 2. 압축을 원하는 폴더(예: `C:\src\flutter`)에 풉니다.  
-   > ⚠️ **주의:** `C:\Program Files` 폴더는 관리자 권한 문제로 피하세요.
+   >  **주의:** `C:\Program Files` 폴더는 관리자 권한 문제로 피하세요.
 
 ---
 
-## 🧭 2. 환경 변수(Path) 등록
+##  2. 환경 변수(Path) 등록
 
 1. Windows 검색창에 **"환경 변수"** 입력 → **"시스템 환경 변수 편집"** 클릭  
 2. **"환경 변수"** 버튼 클릭 → "사용자 변수" 항목에서 **Path** 선택 후 **"편집"** 클릭  
@@ -26,7 +28,7 @@ flutter --version
 
 ---
 
-## 💡 3. Android Studio 설치 및 설정
+##  3. Android Studio 설치 및 설정
 
 1. [Android Studio 공식 사이트](https://developer.android.com/studio)에서 설치 파일을 내려받아 실행  
 2. 설치 중 **"Android Virtual Device"**도 함께 체크하여 설치  
@@ -36,7 +38,7 @@ flutter --version
 4. **Settings → Appearance & Behavior → System Settings → Android SDK** →  
 **SDK Tools 탭 → "Android SDK Command-line Tools" 체크 후 설치**
 
-> 💬 **팁:** SDK 경로는 기본적으로 `C:\Users\<사용자명>\AppData\Local\Android\Sdk`에 설치됩니다.  
+>  **팁:** SDK 경로는 기본적으로 `C:\Users\<사용자명>\AppData\Local\Android\Sdk`에 설치됩니다.  
 > Flutter가 해당 경로를 자동으로 인식하지 못할 경우,  
 > 명령어로 수동 설정할 수 있습니다:
 > ```
@@ -45,7 +47,7 @@ flutter --version
 
 ---
 
-## 🩺 4. Flutter Doctor로 환경 점검
+##  4. Flutter Doctor로 환경 점검
 
 1. 명령 프롬프트(cmd)에서 다음 명령 실행:
 flutter doctor
@@ -57,7 +59,7 @@ flutter doctor --android-licenses
 
 ---
 
-## 🚀 5. 새 Flutter 프로젝트 생성
+##  5. 새 Flutter 프로젝트 생성
 
 ### Android Studio에서
 1. **"New Flutter Project"** 클릭  
@@ -71,7 +73,7 @@ flutter run
 
 ---
 
-## 🧠 추가 팁
+##  추가 팁
 
 - **Visual Studio Code** 사용 시: Flutter & Dart 확장 설치 후 바로 실행 가능  
 - Flutter 최신 버전으로 업데이트:
