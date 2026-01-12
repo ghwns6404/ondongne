@@ -73,7 +73,16 @@ flutter run
 
 ---
 
-##  추가 팁
+## 6. 프로젝트 실행 방법 (웹)
+1. C:\Users\본인경로\\ondongne-1> cd frontend
+2. PS C:\Users\본인경로\ondongne-1\frontend> flutter run -d Chrome
+   #flutter run으로 실행 한 경우
+   [1]: Windows (windows)
+   [2]: Chrome (chrome)
+   [3]: Edge (edge)
+   원하는 브라우저 선택
+
+##  추가 Tip
 
 - **Visual Studio Code** 사용 시: Flutter & Dart 확장 설치 후 바로 실행 가능  
 - Flutter 최신 버전으로 업데이트:
@@ -90,6 +99,6 @@ flutter config --android-sdk <SDK 경로>
 
 이제 준비 끝. 레지고
 
-> 작성일: 2025-10-23
+> 최종 수정일: 2026-01-12
 > 업데이트 기준: Flutter stable 최신 버전 (공식 문서 기준)
 
