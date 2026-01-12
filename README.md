@@ -8,9 +8,7 @@
 <h3>"우리 동네 거래와 소통을 더 똑똑하게"</h3>
 
 AI 기술을 활용해  
-상품 등록은 더 쉽고,  
-거래는 더 안전하고,  
-추천은 더 똑똑하게 만드는  
+상품 등록은 더 쉽고, 거래는 더 안전하고, 추천은 더 똑똑하게 만드는  
 지역 기반 중고거래 & 커뮤니티 플랫폼입니다.
 
 <br />
@@ -192,7 +190,9 @@ AI가 **제목, 설명, 카테고리, 가격 범위**를 자동으로 제안하�
 
 ##  시스템 아키텍처
 
-> 추후 아키텍처 다이어그램 추가 예정
+<img src="https://github.com/ghwns6404/ondongne/blob/main/images/onflowchart.png?raw=true"
+     style="width: 80%; max-width: 800px; height: auto;
+     border-radius: 20px;" />
 
 <br />
 
