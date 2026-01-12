@@ -76,11 +76,11 @@ flutter run
 ## 6. 프로젝트 실행 방법 (웹)
 1. C:\Users\본인경로\\ondongne-1> cd frontend
 2. PS C:\Users\본인경로\ondongne-1\frontend> flutter run -d Chrome
-   #flutter run으로 실행 한 경우
-   [1]: Windows (windows)
-   [2]: Chrome (chrome)
-   [3]: Edge (edge)
-   원하는 브라우저 선택
+   - ** flutter run으로 실행 한 경우 **
+   - (1): Windows (windows)
+   - (2): Chrome (chrome)
+   - (3): Edge (edge)
+   - 원하는 브라우저 선택
 
 ##  추가 Tip
 
